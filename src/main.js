@@ -5,6 +5,7 @@ var path = require('path');
 var child = require('child_process');
 
 var util = require('./util');
+var tempfile = require('./tempfile');
 var settings = require('./settings');
 
 //GET /path/to/image.c.120x64.jpg
@@ -15,15 +16,16 @@ var settings = require('./settings');
 var Server = function(convert, srcDir, destDir) {
     var me = {};
 
-    var regex = /^\/(.+)\.c\.(\d+)x(\d+)\.(\w+)$/;
+    var regex = /^\/(.+)\.c\.(\d+)x(\d+)(\.\w+)$/;
 
     var parseUrl = function(url) {
         var m = regex.exec(url);
         if (!m) {
             return null;
         }
-        var src = path.join(srcDir, '%s.%s'.f(m[1], m[4]));
-        var out = path.join(destDir, url);
+        var ext = m[4];
+        var src = path.join(srcDir, '%s%s'.f(m[1], ext));
+        var out = path.join(destDir, tempfile.getName("", ext));
         return {
             width: m[2] * 1
             , height: m[3] * 1
@@ -53,7 +55,7 @@ var Server = function(convert, srcDir, destDir) {
     var Handler = function(request, response) {
         var me = {};
 
-        var serveFile = function(filePath, mimeType) {
+        var serveFile = function(filePath, mimeType, callback) {
             if (!mimeType) {
                 mimeType = getMimeType(filePath);
             }
@@ -79,6 +81,9 @@ var Server = function(convert, srcDir, destDir) {
                 });
                 stream.on('close', function() {
                     response.end();
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
                 });
                 stream.on('error', function(err) {
                     throw new Error('error reading file: ' + filePath);
@@ -162,6 +167,17 @@ var Server = function(convert, srcDir, destDir) {
                 return;
             }
 
+            var size = '%sx%s'.f(o.width, o.height);
+            resizeImage(o.src, o.out, size, function() {
+                serveFile(o.out, undefined, function() {
+                    fs.unlink(o.out, function(err) {
+                        if (err) {
+                            sys.log('error while deleting: ' + o.out);
+                        }
+                    });
+                });
+            });
+            /*
             path.exists(o.out, function(exists) {
                 if (exists) {
                     sys.log('serving from cache: ' + o.out);
@@ -175,6 +191,7 @@ var Server = function(convert, srcDir, destDir) {
 
                 }
             });
+            */
         };
 
         return me;
