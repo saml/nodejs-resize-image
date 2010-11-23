@@ -3,6 +3,7 @@ var fs = require('fs');
 var sys = require('sys');
 var path = require('path');
 var child = require('child_process');
+var events = require('events');
 
 var util = require('./util');
 var tempfile = require('./tempfile');
@@ -15,6 +16,7 @@ var settings = require('./settings');
 //and serve destDir/path/to/image.c.120x64.jpg
 var Server = function(convert, srcDir, destDir) {
     var me = {};
+
 
     var regex = /^\/(.+)\.c\.(\d+)x(\d+)(\.\w+)$/;
 
@@ -55,6 +57,9 @@ var Server = function(convert, srcDir, destDir) {
     var Handler = function(request, response) {
         var me = {};
 
+        var emitter = new events.EventEmitter();
+        me.emitter = emitter;
+
         var serveFile = function(filePath, mimeType, callback) {
             if (!mimeType) {
                 mimeType = getMimeType(filePath);
@@ -64,7 +69,7 @@ var Server = function(convert, srcDir, destDir) {
 
             fs.stat(filePath, function(err, stat) {
                 if (err || !stat.isFile()) {
-                    me.do404();
+                    emitter.emit('error', me.do404, 'not found: ' + filePath);
                     return;
                 }
 
@@ -86,7 +91,7 @@ var Server = function(convert, srcDir, destDir) {
                     }
                 });
                 stream.on('error', function(err) {
-                    throw new Error('error reading file: ' + filePath);
+                    emitter.emit('error', me.do500, 'error reading file: ' + filePath);
                 });
             });
         };
@@ -104,8 +109,7 @@ var Server = function(convert, srcDir, destDir) {
                             callback(out);
                         }
                     } else {
-                        throw new Error(
-                            'convert %s exited with %s'.f(args.join(' '), code));
+                        emitter.emit('error', me.do500, 'convert %s exited with %s'.f(args.join(' '), code));
                     }
                 });
             };
@@ -113,9 +117,9 @@ var Server = function(convert, srcDir, destDir) {
             util.mkdirP(basePath, 0755, function(err) {
                 if (err) {
                     sys.log(err);
-                    throw new Error('cannot create directory: ' + basePath);
+                    emitter.emit('error', me.do500, 'cannot create directory: ' + basePath);
                 } else {
-                    doResize();
+                    process.nextTick(doResize);
                 }
             });
 
@@ -127,7 +131,7 @@ var Server = function(convert, srcDir, destDir) {
             });
             var data = 'Not Found: ' + request.url;
             if (msg) {
-                data = '\n%s'.f(data);
+                data = '%s\n%s'.f(data, msg);
             }
             response.end(data);
         };
@@ -138,7 +142,7 @@ var Server = function(convert, srcDir, destDir) {
             });
             var data = 'Internal Error: ' + request.url;
             if (msg) {
-                data = '\n%s'.f(msg);
+                data = '%s\n%s'.f(data, msg);
             }
             response.end(data);
         };
@@ -149,21 +153,21 @@ var Server = function(convert, srcDir, destDir) {
             });
             var data = 'Not Supported Method: %s %s'.f(request.method, request.url);
             if (msg) {
-                data = '\n%s'.f(msg);
+                data = '%s\n%s'.f(data, msg);
             }
             response.end(data);
         };
 
-        me.start = function() {
+
+        var start = function() {
             if (request.method !== 'GET') {
-                me.do501();
+                emitter.emit('error', me.do501);
                 return;
             }
 
             var o = parseUrl(request.url);
             if (!o) {
-                sys.log('cannot parse: ' + request.url);
-                me.do404();
+                emitter.emit('error', me.do404, 'cannot parse: ' + request.url);
                 return;
             }
 
@@ -177,22 +181,12 @@ var Server = function(convert, srcDir, destDir) {
                     });
                 });
             });
-            /*
-            path.exists(o.out, function(exists) {
-                if (exists) {
-                    sys.log('serving from cache: ' + o.out);
-                    serveFile(o.out);
-                } else {
-                    sys.log('creating cache: ' + o.out);
-                    var size = '%sx%s'.f(o.width, o.height);
-                    resizeImage(o.src, o.out, size, function() {
-                        serveFile(o.out);
-                    });
-
-                }
-            });
-            */
         };
+
+        me.start = function() {
+            process.nextTick(start);
+        }
+
 
         return me;
     };
@@ -201,13 +195,13 @@ var Server = function(convert, srcDir, destDir) {
 
     me.server = http.createServer(function(request, response) {
         var handler = Handler(request, response);
-        try {
-            handler.start();
-        } catch (e) {
-            var msg = sys.inspect(e, true, null);
-            sys.log('error while handling %s %s'.f(request.url, e));
-            handler.do500();
-        }
+        handler.emitter.on('error', function(f, msg) {
+            if (typeof f === 'function') {
+                sys.log(msg);
+                f();
+            }
+        });
+        handler.start();
     });
 
     me.server.on('close', function() {
@@ -279,7 +273,9 @@ var main = function() {
     process.on('SIGTERM', exit);
     process.on('SIGQUIT', exit);
     process.on('SIGKILL', exit);
-
+    //process.on('uncaughtException', function(err) {
+    //    sys.log(err);
+    //});
     server.start(host, port);
 };
 
