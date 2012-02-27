@@ -10,3 +10,6 @@ module.exports.srcDir = './img/';
 
 //where to store resized files.
 module.exports.destDir = './tmp/';
+
+//whether to leave generated thumbnails or not.
+module.exports.cacheImages = true;

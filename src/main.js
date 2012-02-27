@@ -14,7 +14,7 @@ var settings = require('./settings');
 //convert scrDir/path/to/image.jpg \
 //    -size 120x64 destDir/tempFile.jpg
 //and serve destDir/tempFile.jpg
-var Server = function(convert, srcDir, destDir) {
+var Server = function(convert, srcDir, destDir, cacheImages) {
     var me = {};
 
 
@@ -32,7 +32,7 @@ var Server = function(convert, srcDir, destDir) {
 
         var ext = m[4];
         var src = getSourceImage(m[1]);
-        var out = path.join(destDir, tempfile.getName("", ext));
+        var out = path.join(destDir, url);
         return ({
             width: m[2] * 1,
             height: m[3] * 1,
@@ -164,6 +164,32 @@ var Server = function(convert, srcDir, destDir) {
         };
 
 
+        //serves cached image at imagePath (and deletes possibly).
+        var serveCachedImage = function(imagePath) {
+            serveFile(imagePath, undefined, function() {
+                if (!cacheImages) {
+                    fs.unlink(imagePath, function(err) {
+                        if (err) {
+                            sys.log('error while deleting: ' + imagePath);
+                        }
+                    });
+                }
+            });
+        };
+
+        var serveCachedImageOrGenerate = function(param) {
+            path.exists(param.out, function(exists) {
+                if (exists) {
+                    serveCachedImage(param.out);
+                } else {
+                    var size = '%sx%s'.f(param.width, param.height);
+                    resizeImage(param.src, param.out, size, function() {
+                        serveCachedImage(param.out);
+                    });
+                }
+            });
+        };
+
         var start = function() {
             if (request.method !== 'GET') {
                 emitter.emit('error', me.do501);
@@ -173,16 +199,8 @@ var Server = function(convert, srcDir, destDir) {
             var o = parseUrl(request.url);
             if (o && o.src && o.out && o.width && o.height) {
                 //it is thumbnail url. resize it and serve.
-                var size = '%sx%s'.f(o.width, o.height);
-                resizeImage(o.src, o.out, size, function() {
-                    serveFile(o.out, undefined, function() {
-                        fs.unlink(o.out, function(err) {
-                            if (err) {
-                                sys.log('error while deleting: ' + o.out);
-                            }
-                        });
-                    });
-                });
+                serveCachedImageOrGenerate(o);
+
             } else {
                 //try to serve original without resizing.
                 serveFile(getSourceImage(request.url), undefined);
@@ -238,7 +256,7 @@ var main = function() {
     //    process.exit(1);
     //}
 
-    if (argv.length >= 2) {
+    if (argv.length > 2) {
         console.log("Loading settings from " + argv[2]);
         settings = require(argv[2]);//override settings module with what's supplied by commandline.
     }
@@ -249,6 +267,7 @@ var main = function() {
     var srcDir = settings.srcDir || './';
     var destDir = settings.destDir || './tmp/';
     var baseDir = process.cwd();//__dirname;
+    var cacheImages = typeof settings.cacheImages == 'undefined' ? true : settings.cacheImages;
 
     if (!srcDir.startsWith('/')) {
         srcDir = path.join(baseDir, srcDir);
@@ -264,9 +283,10 @@ var main = function() {
                 + '\tport\t%s\n'.f(port)
                 + '\tconvert\t%s\n'.f(convert)
                 + '\tsrcDir\t%s\n'.f(srcDir)
-                + '\tdestDir\t%s\n'.f(destDir))
+                + '\tdestDir\t%s\n'.f(destDir)
+                + '\tcacheImages\t%s\n'.f(cacheImages));
 
-    var server = Server(convert, srcDir, destDir);
+    var server = Server(convert, srcDir, destDir, cacheImages);
     var exit = function() {
         server.stop();
         process.exit(0);
