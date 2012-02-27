@@ -1,10 +1,10 @@
 # About
 
-For GET requests, dynamically resizes image using ImageMagick and serves the resized image.
+For GET requests, dynamically resizes image using ImageMagick `convert` command and serves the resized image.
 
 For example,
 
-    GET /some/image.c.10x20.jpg
+    GET /some/image.jpg/10x20.jpg
 
 will execute
 

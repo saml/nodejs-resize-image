@@ -18,22 +18,27 @@ var Server = function(convert, srcDir, destDir) {
     var me = {};
 
 
-    var regex = /^\/(.+)\.c\.(\d+)x(\d+)(\.\w+)$/;
+    var regexForThumb = /^\/(.+)\/(\d+)x(\d+)(\.\w+)$/;
+
+    var getSourceImage = function(shortPath) {
+        return path.join(srcDir, shortPath);
+    };
 
     var parseUrl = function(url) {
-        var m = regex.exec(url);
+        var m = regexForThumb.exec(url);
         if (!m) {
             return null;
         }
+
         var ext = m[4];
-        var src = path.join(srcDir, '%s%s'.f(m[1], ext));
+        var src = getSourceImage(m[1]);
         var out = path.join(destDir, tempfile.getName("", ext));
-        return {
-            width: m[2] * 1
-            , height: m[3] * 1
-            , src: src
-            , out: out
-        };
+        return ({
+            width: m[2] * 1,
+            height: m[3] * 1,
+            src: src,
+            out: out
+        });
     };
 
     var getMimeType = function(name) {
@@ -166,21 +171,22 @@ var Server = function(convert, srcDir, destDir) {
             }
 
             var o = parseUrl(request.url);
-            if (!o) {
-                emitter.emit('error', me.do404, 'cannot parse: ' + request.url);
-                return;
-            }
-
-            var size = '%sx%s'.f(o.width, o.height);
-            resizeImage(o.src, o.out, size, function() {
-                serveFile(o.out, undefined, function() {
-                    fs.unlink(o.out, function(err) {
-                        if (err) {
-                            sys.log('error while deleting: ' + o.out);
-                        }
+            if (o && o.src && o.out && o.width && o.height) {
+                //it is thumbnail url. resize it and serve.
+                var size = '%sx%s'.f(o.width, o.height);
+                resizeImage(o.src, o.out, size, function() {
+                    serveFile(o.out, undefined, function() {
+                        fs.unlink(o.out, function(err) {
+                            if (err) {
+                                sys.log('error while deleting: ' + o.out);
+                            }
+                        });
                     });
                 });
-            });
+            } else {
+                //try to serve original without resizing.
+                serveFile(getSourceImage(request.url), undefined);
+            }
         };
 
         me.start = function() {
