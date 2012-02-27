@@ -8,11 +8,11 @@ For example,
 
 will execute
 
-    convert srcDir/some/image.jpg -resize 10x20 destDir/some/image.c.10x20.jpg
+    convert srcDir/some/image.jpg -resize 10x20 destDir/tempFile.jpg
 
 and serves
 
-    destDir/some/image.c.10x20.jpg
+    destDir/tempFile.jpg
 
 convert command, srcDir, and destDir are configurable.
 
@@ -28,11 +28,11 @@ Download and install [Node.js](http://nodejs.org/):
 
 Run
 
-    node src/main.js localhost:8888
+    node src/main.js
 
 Configure
 
-    vim src/settings.js
-
-
+    cp src/settings.js settings.local.js
+    vim settings.local.js
+    node src/main.js /absolute/path/to/settings.local.js
 

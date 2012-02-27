@@ -9,11 +9,11 @@ var util = require('./util');
 var tempfile = require('./tempfile');
 var settings = require('./settings');
 
-//GET /path/to/image.c.120x64.jpg
+//GET /path/to/image.jpg/120x64.jpg
 //will execute
 //convert scrDir/path/to/image.jpg \
-//    -size 120x64 destDir/image.c.120x64.jpg
-//and serve destDir/path/to/image.c.120x64.jpg
+//    -size 120x64 destDir/tempFile.jpg
+//and serve destDir/tempFile.jpg
 var Server = function(convert, srcDir, destDir) {
     var me = {};
 
@@ -237,7 +237,11 @@ var main = function() {
     //    console.log("Usage: %s %s config.json".f(argv[0], argv[1]));
     //    process.exit(1);
     //}
-    //
+
+    if (argv.length >= 2) {
+        console.log("Loading settings from " + argv[2]);
+        settings = require(argv[2]);//override settings module with what's supplied by commandline.
+    }
 
     var port = settings.port || 8080;
     var host = settings.host || '127.0.0.1';
@@ -253,14 +257,7 @@ var main = function() {
         destDir = path.join(baseDir, destDir);
     }
 
-    if (argv.length > 2) {
-        var hostPort = argv[2];
-        var m = /([^:]+):(\d+)/.exec(hostPort);
-        if (m) {
-            host = m[1];
-            port = m[2] * 1.0;
-        }
-    }
+
 
     console.log('Using\n'
                 + '\thost\t%s\n'.f(host)
