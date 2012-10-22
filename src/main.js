@@ -18,27 +18,60 @@ var Server = function(convert, srcDir, destDir, cacheImages) {
     var me = {};
 
 
-    var regexForThumb = /^\/(.+)\/(\d+)x(\d+)(\.\w+)$/;
+    var regexForThumb = /^\/(.+)\/(\d+)x(\d+)\+(\d+)\+(\d+)(\.\w+)$/;
+    var regexForThumbWithoutCrop = /^\/(.+)\/(\d+)x(\d+)(\.\w+)$/;
 
     var getSourceImage = function(shortPath) {
         return path.join(srcDir, shortPath);
     };
 
-    var parseUrl = function(url) {
+    var parseUrlWithoutCrop = function(url) {
+        var m = regexForThumbWithoutCrop.exec(url);
+        if (!m) {
+            return null;
+        }
+
+        var width = m[2] * 1;
+        var height = m[3] * 1;
+        var src = getSourceImage(m[1]);
+        var out = path.join(destDir, url);
+        return ({
+            width: width,
+            height: height,
+            src: src,
+            out: out
+        });
+    };
+
+    var parseUrlWithCrop = function(url) {
         var m = regexForThumb.exec(url);
         if (!m) {
             return null;
         }
 
-        var ext = m[4];
+        var width = m[2] * 1;
+        var height = m[3] * 1;
+        var cropX = m[4] * 1;
+        var cropY = m[5] * 1;
         var src = getSourceImage(m[1]);
         var out = path.join(destDir, url);
         return ({
-            width: m[2] * 1,
-            height: m[3] * 1,
+            width: width,
+            height: height,
+            cropX: cropX,
+            cropY: cropY,
             src: src,
             out: out
         });
+    };
+
+    var parseUrl = function(url) {
+        var o = parseUrlWithCrop(url);
+        if (o) {
+            return o;
+        }
+
+        return parseUrlWithoutCrop(url);
     };
 
     var getMimeType = function(name) {
@@ -101,11 +134,12 @@ var Server = function(convert, srcDir, destDir, cacheImages) {
             });
         };
 
-        var resizeImage = function(src, out, size, callback) {
+        var resizeImage = function(src, out, convertArgs, callback) {
             var basePath = path.dirname(out);
 
             var doResize = function() {
-                var args = [src, '-resize', size, out];
+                var args = [src].concat(convertArgs);
+                args.push(out);
                 sys.log('executing: %s %s'.f(convert, args.join(' ')));
                 var p = child.spawn(convert, args);
                 p.on('exit', function(code) {
@@ -183,7 +217,14 @@ var Server = function(convert, srcDir, destDir, cacheImages) {
                     serveCachedImage(param.out);
                 } else {
                     var size = '%sx%s'.f(param.width, param.height);
-                    resizeImage(param.src, param.out, size, function() {
+                    var args = ['-resize', size];
+                    if (param.cropX && param.cropY) {
+                        size = '%sx%s+%s+%s'.f(param.width, param.height, param.cropX, param.cropY);
+                        args = ['-crop', size];
+                        //args = ['-crop', size, '+repage'];
+                    }
+
+                    resizeImage(param.src, param.out, args, function() {
                         serveCachedImage(param.out);
                     });
                 }
