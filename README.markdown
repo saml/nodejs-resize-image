@@ -1,20 +1,34 @@
 # About
 
-For GET requests, dynamically resizes image using ImageMagick `convert` command and serves the resized image.
+For GET requests, dynamically crops and resizes image using 
+ImageMagick `convert` command.
+And, serves the resized image.
 
-For example,
 
-    GET /some/image.10x20.jpg
+The following crops 1:2 rectangle at center of some/image.jpg. And resizes the crop to 10x20:
 
-will execute
+```
+GET /some/image.10x20.jpg
+```
 
-    convert srcDir/some/image.jpg -resize 10x20> destDir/tempFile.jpg
+You can specify where to crop other than center. The following crops at the top (north).
 
-and serves
+```
+GET /some/image.10x20n.jpg
+```
 
-    destDir/tempFile.jpg
+Other parameters:
 
-convert command, srcDir, and destDir are configurable.
+Parameter :|: Crops At :|: Example :|: Comment
+ | Center | GET /some/image.10x20.jpg | Not specifying a parameter crops at center.
+t | No Crop | GET /some/image.100x400t.jpg | Instead of cropping, some/image.jpg is resized to fit in 100x400 rectangle.
+n | North | GET /a/b.100x400n.jpg |
+ne | NorthEast | GET /a/b.100x400ne.jpg |
+se | SouthEast | GET /a/b.100x400se.jpg |
+s | South | GET /a/b.100x400s.jpg |
+sw | SouthWest | GET /a/b.100x400sw.jpg |
+w | West | GET /a/b.100x400w.jpg |
+nw | NorthWest | GET /a/b.100x400nw.jpg |
 
 # Quickstart
 
