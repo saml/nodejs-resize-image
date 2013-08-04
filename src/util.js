@@ -32,6 +32,22 @@ if (String.prototype.startsWith !== 'function') {
     };
 }
 
+/*
+if (Array.prototype.collectFirst !== 'function') {
+    Array.prototype.collectFirst = function(pred) {
+        var n = this.length;
+        var i = 0;
+        for (; i < n; i++) {
+            var x = this[i];
+            if (pred(x)) {
+                return x;
+            }
+        }
+        return null;
+    };
+}
+*/
+
 var path = require('path');
 var fs = require('fs');
 
@@ -42,7 +58,7 @@ var mkdirP = function(p, mode, callback) {
     }
 
     var ps = path.normalize(p).split('/');
-    path.exists(p, function (exists) {
+    fs.exists(p, function (exists) {
         if (exists) {
             cb(null);
         } else {
