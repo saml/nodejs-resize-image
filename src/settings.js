@@ -1,15 +1,24 @@
-module.exports.port = 8383;
-module.exports.host = '127.0.0.1';
+var config = {};
+config.port = 8383;
+config.host = '0.0.0.0';
 
 //imagemagick command. can be absolute path: /usr/bin/convert
-module.exports.convert = 'convert';
-
+config.convertCmd = 'convert';
 
 //where images are located. can be absolute path.
-module.exports.srcDir = './img/';
-
+config.srcDir = './img/';
 //where to store resized files.
-module.exports.destDir = './tmp/';
-
+config.destDir = './tmp/';
 //whether to leave generated thumbnails or not.
-module.exports.cacheImages = true;
+config.cacheImages = true;
+
+
+var localConfig = {};
+try {
+    localConfig = require('./settings.local');
+} catch(err) {
+} finally {
+    localConfig.__proto__ = config;
+}
+
+module.exports = localConfig;

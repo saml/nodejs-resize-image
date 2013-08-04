@@ -4,11 +4,11 @@ For GET requests, dynamically resizes image using ImageMagick `convert` command 
 
 For example,
 
-    GET /some/image.jpg/10x20.jpg
+    GET /some/image.10x20.jpg
 
 will execute
 
-    convert srcDir/some/image.jpg -resize 10x20 destDir/tempFile.jpg
+    convert srcDir/some/image.jpg -resize 10x20> destDir/tempFile.jpg
 
 and serves
 
@@ -16,15 +16,7 @@ and serves
 
 convert command, srcDir, and destDir are configurable.
 
-# Getting started
-
-Download and install [Node.js](http://nodejs.org/):
-
-    cd node-v0.2.5
-    ./configure --prefix=$HOME/opt/nodejs --without-ssl
-    make
-    make install
-    #add nodejs/bin to PATH
+# Quickstart
 
 Run
 
@@ -32,7 +24,15 @@ Run
 
 Configure
 
-    cp src/settings.js settings.local.js
+    cp src/settings.js src/settings.local.js
     vim settings.local.js
-    node src/main.js /absolute/path/to/settings.local.js
 
+Example `settings.local.js`:
+
+
+    module.exports = {
+        port: 8081,
+        srcDir: '/var/www',
+        destDir: '/var/cache',
+        convertcmd: '/usr/local/bin/convert'
+    }

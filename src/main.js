@@ -14,12 +14,12 @@ var settings = require('./settings');
 //convert scrDir/path/to/image.jpg \
 //    -size 120x64 destDir/tempFile.jpg
 //and serve destDir/tempFile.jpg
-var Server = function(convert, srcDir, destDir, cacheImages) {
+var Server = function(convertCmd, srcDir, destDir, cacheImages) {
     var me = {};
 
 
     var regexForThumb = /^\/(.+)\/(\d+)x(\d+)\+(\d+)\+(\d+)(\.\w+)$/;
-    var regexForThumbWithoutCrop = /^\/(.+)\/(\d+)x(\d+)(\.\w+)$/;
+    var regexForThumbWithoutCrop = /^\/(.+)\.(\d+)x(\d+)(\.\w+)$/;
 
     var getSourceImage = function(shortPath) {
         return path.join(srcDir, shortPath);
@@ -33,7 +33,8 @@ var Server = function(convert, srcDir, destDir, cacheImages) {
 
         var width = m[2] * 1;
         var height = m[3] * 1;
-        var src = getSourceImage(m[1]);
+        var ext = m[4];
+        var src = getSourceImage(m[1] + ext);
         var out = path.join(destDir, url);
         return ({
             width: width,
@@ -106,6 +107,7 @@ var Server = function(convert, srcDir, destDir, cacheImages) {
             var encoding = 'binary';
 
             fs.stat(filePath, function(err, stat) {
+                //var isFavicon = filePath.lastIndexOf('/favicon.ico') == filePath.length - 12;//'/favicon.ico'.length 
                 if (err || !stat.isFile()) {
                     emitter.emit('error', me.do404, 'not found: ' + filePath);
                     return;
@@ -140,8 +142,8 @@ var Server = function(convert, srcDir, destDir, cacheImages) {
             var doResize = function() {
                 var args = [src].concat(convertArgs);
                 args.push(out);
-                sys.log('executing: %s %s'.f(convert, args.join(' ')));
-                var p = child.spawn(convert, args);
+                sys.log('executing: %s %s'.f(convertCmd, args.join(' ')));
+                var p = child.spawn(convertCmd, args);
                 p.on('exit', function(code) {
                     if (code === 0) {
                         if (typeof callback === 'function') {
@@ -212,11 +214,11 @@ var Server = function(convert, srcDir, destDir, cacheImages) {
         };
 
         var serveCachedImageOrGenerate = function(param) {
-            path.exists(param.out, function(exists) {
+            fs.exists(param.out, function(exists) {
                 if (exists) {
                     serveCachedImage(param.out);
                 } else {
-                    var size = '%sx%s'.f(param.width, param.height);
+                    var size = '%sx%s>'.f(param.width, param.height);
                     var args = ['-resize', size];
                     if (param.cropX && param.cropY) {
                         size = '%sx%s+%s+%s'.f(param.width, param.height, param.cropX, param.cropY);
@@ -291,24 +293,13 @@ var Server = function(convert, srcDir, destDir, cacheImages) {
 };
 
 var main = function() {
-    var argv = process.argv;
-    //if (argv.length < 3) {
-    //    console.log("Usage: %s %s config.json".f(argv[0], argv[1]));
-    //    process.exit(1);
-    //}
-
-    if (argv.length > 2) {
-        console.log("Loading settings from " + argv[2]);
-        settings = require(argv[2]);//override settings module with what's supplied by commandline.
-    }
-
-    var port = settings.port || 8080;
-    var host = settings.host || '127.0.0.1';
-    var convert = settings.convert || 'convert';
-    var srcDir = settings.srcDir || './';
-    var destDir = settings.destDir || './tmp/';
+    var port = settings.port;
+    var host = settings.host;
+    var convertCmd = settings.convertCmd;
+    var srcDir = settings.srcDir;
+    var destDir = settings.destDir;
     var baseDir = process.cwd();//__dirname;
-    var cacheImages = typeof settings.cacheImages == 'undefined' ? true : settings.cacheImages;
+    var cacheImages = settings.cacheImages;
 
     if (!srcDir.startsWith('/')) {
         srcDir = path.join(baseDir, srcDir);
@@ -320,23 +311,26 @@ var main = function() {
 
 
     console.log('Using\n'
-                + '\thost\t%s\n'.f(host)
-                + '\tport\t%s\n'.f(port)
-                + '\tconvert\t%s\n'.f(convert)
-                + '\tsrcDir\t%s\n'.f(srcDir)
-                + '\tdestDir\t%s\n'.f(destDir)
-                + '\tcacheImages\t%s\n'.f(cacheImages));
+                + '  host         %s\n'.f(host)
+                + '  port         %s\n'.f(port)
+                + '  convert cmd  %s\n'.f(convertCmd)
+                + '  srcDir       %s\n'.f(srcDir)
+                + '  destDir      %s\n'.f(destDir)
+                + '  cacheImages  %s\n'.f(cacheImages));
 
-    var server = Server(convert, srcDir, destDir, cacheImages);
+    var server = Server(convertCmd, srcDir, destDir, cacheImages);
     var exit = function() {
         server.stop();
+        console.log('Bye');
         process.exit(0);
     };
 
+    //process.on('exit', exit);
     process.on('SIGINT', exit);
     process.on('SIGTERM', exit);
     process.on('SIGQUIT', exit);
-    process.on('SIGKILL', exit);
+    /*
+    */
     //process.on('uncaughtException', function(err) {
     //    sys.log(err);
     //});
