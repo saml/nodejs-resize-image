@@ -20,7 +20,24 @@ var Module = function(srcDir, destDir) {
     var CropParser = function() {
         var me = {};
 
-        var UrlRE = /^\/(.+)\.(\d+)x(\d+)(\.\w+)$/;
+        var UrlRE = /^\/(.+)\.(\d+)x(\d+)(n|nw|w|sw|s|se|e|ne)?(\.\w+)$/;
+        var GravityMap = {
+            n: 'North',
+            nw: 'NorthWest',
+            w: 'West',
+            sw: 'SouthWest',
+            s: 'South',
+            se: 'SouthEast',
+            e: 'East',
+            ne: 'NorthEast'
+        };
+
+        var getGravity = function(key) {
+            if (!key) {
+                return 'Center';
+            }
+            return GravityMap[key];
+        };
 
         me.parse = function(url) {
             var m = UrlRE.exec(url);
@@ -30,7 +47,8 @@ var Module = function(srcDir, destDir) {
 
             var width = m[2] * 1;
             var height = m[3] * 1;
-            var ext = m[4];
+            var gravity = getGravity(m[4]);
+            var ext = m[5];
             var imgId = m[1] + ext;
 
             var src = getImgPath(m[1]+ext);
@@ -42,7 +60,7 @@ var Module = function(srcDir, destDir) {
                 src: src,
                 out: out,
                 args: ['-resize', '%sx%s^'.f(width, height), 
-                    '-gravity', 'center',
+                    '-gravity', gravity,
                     '-crop', '%sx%s+0+0'.f(width, height),
                     '+repage']
             });
@@ -53,7 +71,7 @@ var Module = function(srcDir, destDir) {
     var ThumbnailParser = function() {
         var me = {};
 
-        var UrlRE = /^\/(.+)\.t.(\d+)x(\d+)(\.\w+)$/;
+        var UrlRE = /^\/(.+)\.(\d+)x(\d+)t(\.\w+)$/;
 
         me.parse = function(url) {
             var m = UrlRE.exec(url);
