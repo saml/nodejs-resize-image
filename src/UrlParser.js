@@ -10,7 +10,7 @@ var Module = function(srcDir, destDir) {
     var me = {};
 
     var getImgPath = function(imgId) {
-        return path.join(srcDir, imgId);
+        return path.join(srcDir, util.normalizeUrl(imgId));
     };
 
     var getOutputPath = function(url) {
@@ -98,8 +98,21 @@ var Module = function(srcDir, destDir) {
         return me;
     };
 
+    var OriginalImgParser = function() {
+        var me = {};
+        var UrlRE = /^\/(.+)$/;
+        me.parse = function(url) {
+            var m = UrlRE.exec(url);
+            var src = getImgPath(m[1]);
+            return ({
+                src: src
+            });
+        };
+        return me;
+    };
 
-    var parsers = [CropParser(), ThumbnailParser()];
+
+    var parsers = [CropParser(), ThumbnailParser(), OriginalImgParser()];
     var parsersLength = parsers.length;
 
     me.parse = function(url) {
@@ -108,13 +121,15 @@ var Module = function(srcDir, destDir) {
             var parser = parsers[i];
             var parsed = parser.parse(url);
             if (parsed) {
+                var normalizedUrl = util.normalizeUrl(url);
+                parsed.isRemote = normalizedUrl.startsWith('http/') || normalizedUrl.startsWith('https/');
+                parsed.url = url;
+                parsed.normalizedUrl = normalizedUrl;
                 return parsed;
             }
         }
         return null;
     };
-
-    me.getImgPath = getImgPath;
 
     return me;
 };

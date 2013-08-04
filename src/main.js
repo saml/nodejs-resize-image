@@ -1,7 +1,6 @@
 var path = require('path');
 
 var util = require('./util');
-var tempfile = require('./tempfile');
 var settings = require('./settings');
 var Server = require('./Server');
 

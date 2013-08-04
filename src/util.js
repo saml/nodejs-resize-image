@@ -50,8 +50,12 @@ if (Array.prototype.collectFirst !== 'function') {
 
 var path = require('path');
 var fs = require('fs');
+var http = require('http');
+var https = require('https');
 
-var mkdirP = function(p, mode, callback) {
+var Module = {};
+
+Module.mkdirP = function(p, mode, callback) {
     var cb = callback || function () {};
     if (p.charAt(0) !== '/') {
         p = path.join(process.cwd(), p);
@@ -62,7 +66,7 @@ var mkdirP = function(p, mode, callback) {
         if (exists) {
             cb(null);
         } else {
-            mkdirP(ps.slice(0,-1).join('/'), mode, function (err) {
+            Module.mkdirP(ps.slice(0,-1).join('/'), mode, function (err) {
                 if (err && err.errno != process.EEXIST) {
                     cb(err);
                 } else {
@@ -73,5 +77,50 @@ var mkdirP = function(p, mode, callback) {
     });
 };
 
-exports.mkdirP = mkdirP;
+var UrlRE = /^\/*(https?)(?:\:\/\/|\/)?(.+)$/;
+var PathRE = /^\/*([^:]+)$/;
+
+Module.normalizeUrl = function(url) {
+    var m = UrlRE.exec(url);
+    if (!m) {
+        var pathMatch = PathRE.exec(url);
+        return pathMatch[1];
+    }
+    return path.join(m[1], m[2]);
+};
+
+
+/**
+ * downloads url and calls callback(error or null);
+ */
+Module.downloadAnd = function(url, target, callback) {
+    var targetDir = path.dirname(target);
+    fs.exists(targetDir, function(exists) {
+        if (!exists) {
+            Module.mkdirP(targetDir, 0755, function(err) {
+                if (err) {
+                    callback(err);
+                } else {
+                    var GET = http.get;
+                    if (url.startsWith('https://')) {
+                        GET = https.get;
+                    }
+                    console.log('downloading %s => %s', url, target);
+                    GET(url, function(resp) {
+                        //maybe download to /tmp and rename.
+                        var file = fs.createWriteStream(target);
+                        resp.on('data', function(chunk) {
+                            file.write(chunk);
+                        }).on('end', function() {
+                            file.end();
+                            callback(null);
+                        });
+                    });
+                }
+            });
+        }
+    });
+};
+
+module.exports = Module;
 

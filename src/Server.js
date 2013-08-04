@@ -1,6 +1,5 @@
 var http = require('http');
 var fs = require('fs');
-var sys = require('sys');
 var path = require('path');
 var child = require('child_process');
 var events = require('events');
@@ -80,7 +79,7 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages) {
             var doResize = function() {
                 var args = [src].concat(convertArgs);
                 args.push(out);
-                sys.log('executing: %s %s'.f(convertCmd, args.join(' ')));
+                console.log('executing: %s %s', convertCmd, args.join(' '));
                 var p = child.spawn(convertCmd, args);
                 p.on('exit', function(code) {
                     if (code === 0) {
@@ -95,7 +94,7 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages) {
 
             util.mkdirP(basePath, 0755, function(err) {
                 if (err) {
-                    sys.log(err);
+                    console.log(err);
                     emitter.emit('error', me.do500, 'cannot create directory: ' + basePath);
                 } else {
                     process.nextTick(doResize);
@@ -144,7 +143,7 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages) {
                 if (!cacheImages) {
                     fs.unlink(imagePath, function(err) {
                         if (err) {
-                            sys.log('error while deleting: ' + imagePath);
+                            console.log('error while deleting: ' + imagePath);
                         }
                     });
                 }
@@ -163,18 +162,60 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages) {
             });
         };
 
+        var downloadAndTry = function(params) {
+            var targetDir = path.dirname(params.src);
+            fs.exists(targetDir, function(exists) {
+                if (!exists) {
+                    util.mkdirP(targetDir, 0755, function(err) {
+                        if (err) {
+                        } else {
+                            var url = params.url.substring(1);
+                            util.download
+                        }
+                    });
+                }
+            });
+        };
+
+        var serveImage = function(params) {
+            if (typeof params.args === 'undefined') {
+                //original
+                serveFile(params.src, undefined);
+            } else {
+                serveCachedImageOrGenerate(params);
+            }
+        };
+    
+        var downloadAndTry = function(params) {
+            var url = params.url.substring(1);
+            var output = params.src;
+            util.downloadAnd(url, output, function(err) {
+                if (err) {
+                } else {
+                    serveImage(params);
+                }
+            });
+        };
+
         var start = function() {
             if (request.method !== 'GET') {
                 emitter.emit('error', me.do501);
                 return;
             }
+            
+            var url = request.url;
+            var parsed = urlParser.parse(request.url);
+            var src = parsed.src;
+            var isRemoteSrc = parsed.isRemote;
 
-            var thumbGenParams = urlParser.parse(request.url);
-            if (thumbGenParams === null) {
-                serveFile(urlParser.getImgPath(request.url), undefined);
-            } else {
-                serveCachedImageOrGenerate(thumbGenParams);
-            }
+            fs.exists(src, function(exists) {
+                if (!exists && isRemoteSrc) {
+                    downloadAndTry(parsed);
+                } else {
+                    serveImage(parsed);
+                }
+            });
+
         };
 
         me.start = function() {
@@ -191,7 +232,7 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages) {
         var handler = Handler(request, response);
         handler.emitter.on('error', function(f, msg) {
             if (typeof f === 'function') {
-                sys.log(msg);
+                console.log(msg);
                 f();
             }
         });
@@ -199,13 +240,13 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages) {
     });
 
     me.server.on('close', function() {
-        sys.log('Server stopped');
+        console.log('Server stopped');
     });
 
     me.start = function(host, port) {
         me.stop();
         me.server.listen(port, host, function() {
-            sys.log('Server started %s:%s'.f(host, port));
+            console.log('Server started %s:%d', host, port);
         });
     };
 

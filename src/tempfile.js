@@ -1,8 +1,9 @@
 var path = require('path');
+var os = require('os');
 
 var util = require('./util');
 
-var defaultRootDir = '/tmp';
+var defaultRootDir = os.tmpdir();
 var defaultPrefix = "tmp-";
 var defaultPostfix = "";
 
@@ -24,7 +25,7 @@ var getName = function(prefix, postfix) {
     return prefix + generateName() + postfix;
 };
 
-var getPath = function(rootDir, prefix, postfix) {
+var getPath = function(prefix, postfix, rootDir) {
     if (undefined === rootDir) {
         rootDir = defaultRootDir;
     }
