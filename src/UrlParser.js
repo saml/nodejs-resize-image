@@ -9,12 +9,36 @@ var util = require('./util');
 var Module = function(srcDir, destDir) {
     var me = {};
 
+
+    var PathUrlRE = /^\/*(https?)(?:\:\/\/|\/)?(.+)$/;
+    var PathRE = /^\/*([^:]+)$/;
+    var HttpUrlRE = /(https?)(?:\:\/\/)?(.+)$/;
+
+    var normalizeUrl = function(url) {
+        var m = PathUrlRE.exec(url);
+        if (!m) {
+            var pathMatch = PathRE.exec(url);
+            return pathMatch[1];
+        }
+        return path.join(m[1], m[2]);
+    };
+
+
+
     var getImgPath = function(imgId) {
-        return path.join(srcDir, util.normalizeUrl(imgId));
+        return path.join(srcDir, normalizeUrl(imgId));
     };
 
     var getOutputPath = function(url) {
         return path.join(destDir, url);
+    };
+
+    var getRemoteOriginUrl = function(imgId) {
+        var m = HttpUrlRE.exec(imgId);
+        if (!m) {
+            return null;
+        }
+        return m[1] + '://' + m[2];
     };
 
     var CropParser = function() {
@@ -51,10 +75,12 @@ var Module = function(srcDir, destDir) {
             var ext = m[5];
             var imgId = m[1] + ext;
 
-            var src = getImgPath(m[1]+ext);
+            var src = getImgPath(imgId);
             var out = getOutputPath(url);
+            var remoteUrl = getRemoteOriginUrl(imgId);
 
             return ({
+                remoteUrl: remoteUrl,
                 width: width,
                 height: height,
                 src: src,
@@ -84,10 +110,12 @@ var Module = function(srcDir, destDir) {
             var ext = m[4];
             var imgId = m[1] + ext;
 
-            var src = getImgPath(m[1]+ext);
+            var src = getImgPath(imgId);
             var out = getOutputPath(url);
+            var remoteUrl = getRemoteOriginUrl(imgId);
 
             return ({
+                remoteUrl: remoteUrl,
                 width: width,
                 height: height,
                 src: src,
@@ -103,8 +131,11 @@ var Module = function(srcDir, destDir) {
         var UrlRE = /^\/(.+)$/;
         me.parse = function(url) {
             var m = UrlRE.exec(url);
-            var src = getImgPath(m[1]);
+            var imgId = m[1];
+            var src = getImgPath(imgId);
+            var remoteUrl = getRemoteOriginUrl(imgId);
             return ({
+                remoteUrl: remoteUrl,
                 src: src
             });
         };
@@ -121,7 +152,7 @@ var Module = function(srcDir, destDir) {
             var parser = parsers[i];
             var parsed = parser.parse(url);
             if (parsed) {
-                var normalizedUrl = util.normalizeUrl(url);
+                var normalizedUrl = normalizeUrl(url);
                 parsed.isRemote = normalizedUrl.startsWith('http/') || normalizedUrl.startsWith('https/');
                 parsed.url = url;
                 parsed.normalizedUrl = normalizedUrl;

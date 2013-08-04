@@ -187,7 +187,7 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages) {
         };
     
         var downloadAndTry = function(params) {
-            var url = params.url.substring(1);
+            var url = params.remoteUrl;
             var output = params.src;
             util.downloadAnd(url, output, function(err) {
                 if (err) {
