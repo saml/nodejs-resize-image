@@ -93,7 +93,6 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages) {
 
             util.mkdirP(basePath, 0755, function(err) {
                 if (err) {
-                    console.log(err);
                     emitter.emit('error', me.do500, 'cannot create directory: ' + basePath);
                 } else {
                     process.nextTick(doResize);
@@ -179,8 +178,6 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages) {
 
             var output = params.src;
             util.downloadAnd(url, output, function(err) {
-                console.log(typeof err);
-                console.log(err);
                 if (err) {
                     emitter.emit('error', me.do500, 'Failed to download: '+url);
                 } else {
