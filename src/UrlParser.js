@@ -6,7 +6,7 @@ var util = require('./util');
  *
  * paramatized module
  */
-var Module = function(srcDir, destDir) {
+var Module = function(srcDir, destDir, maxOutputSize) {
     var me = {};
 
 
@@ -23,6 +23,21 @@ var Module = function(srcDir, destDir) {
         return path.join(m[1], m[2]);
     };
 
+    var normalizeSize = function(width, height) {
+        var w, h;
+        if (width > height) {
+            h = maxOutputSize * height / width;
+            w = maxOutputSize;
+        } else {
+            w = maxOutputSize * width / height;
+            h = maxOutputSize;
+        }
+        if (w >= width && h >= height) {
+            w = width;
+            h = height;
+        }
+        return {width: w, height: h};
+    };
 
 
     var getImgPath = function(imgId) {
@@ -69,8 +84,9 @@ var Module = function(srcDir, destDir) {
                 return null;
             }
 
-            var width = m[2] * 1;
-            var height = m[3] * 1;
+            var size = normalizeSize(m[2]*1, m[3]*1);
+            var width = size.width;
+            var height = size.height;
             var gravity = getGravity(m[4]);
             var ext = m[5];
             var imgId = m[1] + ext;
@@ -104,8 +120,10 @@ var Module = function(srcDir, destDir) {
                 return null;
             }
 
-            var width = m[2] * 1;
-            var height = m[3] * 1;
+
+            var size = normalizeSize(m[2]*1, m[3]*1);
+            var width = size.width;
+            var height = size.height;
             var ext = m[4];
             var imgId = m[1] + ext;
 

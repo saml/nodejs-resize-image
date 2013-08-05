@@ -12,6 +12,8 @@ config.destDir = './tmp/';
 //whether to leave generated thumbnails or not.
 config.cacheImages = true;
 
+//maximum supported output image size.
+config.maxOutputSize = 1200;
 
 var localConfig = {};
 try {

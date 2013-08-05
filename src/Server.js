@@ -7,10 +7,10 @@ var events = require('events');
 var util = require('./util');
 var UrlParser = require('./UrlParser');
 
-var Server = function(convertCmd, srcDir, destDir, cacheImages) {
+var Server = function(convertCmd, srcDir, destDir, cacheImages, maxOutputSize) {
     var me = {};
 
-    var urlParser = UrlParser(srcDir, destDir);
+    var urlParser = UrlParser(srcDir, destDir, maxOutputSize);
 
     var getMimeType = function(name) {
         var ext = path.extname(name).toLowerCase();
