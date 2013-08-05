@@ -30,6 +30,14 @@ sw | SouthWest | GET /a/b.100x400sw.jpg |
 w | West | GET /a/b.100x400w.jpg |
 nw | NorthWest | GET /a/b.100x400nw.jpg |
 
+# Example
+
+- [300x300 cropped to center](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300.jpg)
+- [300x300 thumbnail](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300t.jpg)
+- [300x300 cropped to west](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300w.jpg)
+- [300x300 cropped to east](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300e.jpg)
+- [300x300 cropped to north](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300n.jpg)
+
 # Quickstart
 
 Run
