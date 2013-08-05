@@ -19,7 +19,8 @@ GET /some/image.10x20n.jpg
 
 Other parameters:
 
-Parameter :|: Crops At :|: Example :|: Comment
+Parameter | Crops At | Example | Comment
+----------|----------|---------|---------
  | Center | GET /some/image.10x20.jpg | Not specifying a parameter crops at center.
 t | No Crop | GET /some/image.100x400t.jpg | Instead of cropping, some/image.jpg is resized to fit in 100x400 rectangle.
 n | North | GET /a/b.100x400n.jpg |
