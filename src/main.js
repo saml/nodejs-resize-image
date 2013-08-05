@@ -5,7 +5,8 @@ var settings = require('./settings');
 var Server = require('./Server');
 
 var main = function() {
-    var port = settings.port;
+    var argv = process.argv.splice(2);
+    var port = argv.length > 0 ? (argv[0] * 1) : settings.port;
     var host = settings.host;
     var convertCmd = settings.convertCmd;
     var srcDir = settings.srcDir;
