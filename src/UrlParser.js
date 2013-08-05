@@ -11,7 +11,7 @@ var Module = function(srcDir, destDir) {
 
 
     var PathUrlRE = /^\/*(https?)(?:\:\/)?\/(.+)$/;
-    var PathRE = /^\/*([^:]+)$/;
+    var PathRE = /^\/*(.+)$/;
     var HttpUrlRE = /^(https?)(?:\:\/)?\/(.+)$/;
 
     var normalizeUrl = function(url) {
@@ -30,7 +30,7 @@ var Module = function(srcDir, destDir) {
     };
 
     var getOutputPath = function(url) {
-        return path.join(destDir, url);
+        return path.join(destDir, normalizeUrl(url));
     };
 
     var getRemoteOriginUrl = function(imgId) {
