@@ -75,10 +75,37 @@ var mkdirP = function(p, mode, callback) {
     });
 };
 
+
+var downloadAnd = function(url, target, callback) {
+    var GET = http.get;
+    if (url.startsWith('https://')) {
+        GET = https.get;
+    }
+    console.log('downloading %s => %s', url, target);
+    GET(url, function(resp) {
+        if (resp.statusCode !== 200) {
+            callback(new Error("remote server didn't respond with 200: "+url));
+            return;
+        }
+
+        //maybe download to /tmp and rename.
+        var file = fs.createWriteStream(target);
+        resp.on('data', function(chunk) {
+            file.write(chunk);
+        }).on('end', function() {
+            file.end();
+            callback(null);
+        });
+    }).on('error', function(err) {
+        callback(err); 
+    }).setTimeout(5000);
+};
+
+
 /**
  * downloads url and calls callback(error or null);
  */
-var downloadAnd = function(url, target, callback) {
+var ensureDirAndDownload = function(url, target, callback) {
     var targetDir = path.dirname(target);
     fs.exists(targetDir, function(exists) {
         if (!exists) {
@@ -86,38 +113,17 @@ var downloadAnd = function(url, target, callback) {
                 if (err) {
                     callback(err);
                 } else {
-                    var GET = http.get;
-                    if (url.startsWith('https://')) {
-                        GET = https.get;
-                    }
-                    console.log('downloading %s => %s', url, target);
-                    var request = GET(url, function(resp) {
-                        if (resp.statusCode !== 200) {
-                            callback(new Error("remote server didn't respond with 200: "+url));
-                            return;
-                        }
-
-                        //maybe download to /tmp and rename.
-                        var file = fs.createWriteStream(target);
-                        resp.on('data', function(chunk) {
-                            file.write(chunk);
-                        }).on('end', function() {
-                            file.end();
-                            callback(null);
-                        });
-                    });
-                    request.setTimeout(5000);
-                    request.on('error', function(err) {
-                        callback(err); 
-                    });
+                    downloadAnd(url, target, callback);
                 }
             });
+        } else {
+            downloadAnd(url, target, callback);
         }
     });
 };
 
 module.exports = {
     mkdirP: mkdirP,
-    downloadAnd: downloadAnd
+    downloadAnd: ensureDirAndDownload
 };
 

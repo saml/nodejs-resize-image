@@ -171,11 +171,6 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages) {
     
         var downloadAndTry = function(params) {
             var url = params.remoteUrl;
-            if (!url) {
-                emitter.emit('error', me.do500, 'Not remote resource. Cannot download');
-                return;
-            }
-
             var output = params.src;
             util.downloadAnd(url, output, function(err) {
                 if (err) {

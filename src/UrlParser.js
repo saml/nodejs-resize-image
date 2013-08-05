@@ -127,7 +127,7 @@ var Module = function(srcDir, destDir) {
 
     var OriginalImgParser = function() {
         var me = {};
-        var UrlRE = /^\/(.+)$/;
+        var UrlRE = /^\/(.+\.\w+)$/;
         me.parse = function(url) {
             var m = UrlRE.exec(url);
             var imgId = m[1];
