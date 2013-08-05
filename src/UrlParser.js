@@ -10,9 +10,9 @@ var Module = function(srcDir, destDir) {
     var me = {};
 
 
-    var PathUrlRE = /^\/*(https?)(?:\:\/\/|\/)?(.+)$/;
+    var PathUrlRE = /^\/*(https?)(?:\:\/)?\/(.+)$/;
     var PathRE = /^\/*([^:]+)$/;
-    var HttpUrlRE = /(https?)(?:\:\/\/)?(.+)$/;
+    var HttpUrlRE = /^(https?)(?:\:\/)?\/(.+)$/;
 
     var normalizeUrl = function(url) {
         var m = PathUrlRE.exec(url);
@@ -78,7 +78,6 @@ var Module = function(srcDir, destDir) {
             var src = getImgPath(imgId);
             var out = getOutputPath(url);
             var remoteUrl = getRemoteOriginUrl(imgId);
-
             return ({
                 remoteUrl: remoteUrl,
                 width: width,
@@ -152,10 +151,6 @@ var Module = function(srcDir, destDir) {
             var parser = parsers[i];
             var parsed = parser.parse(url);
             if (parsed) {
-                var normalizedUrl = normalizeUrl(url);
-                parsed.isRemote = normalizedUrl.startsWith('http/') || normalizedUrl.startsWith('https/');
-                parsed.url = url;
-                parsed.normalizedUrl = normalizedUrl;
                 return parsed;
             }
         }

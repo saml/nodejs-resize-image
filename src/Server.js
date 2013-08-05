@@ -44,7 +44,6 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages) {
             var encoding = 'binary';
 
             fs.stat(filePath, function(err, stat) {
-                //var isFavicon = filePath.lastIndexOf('/favicon.ico') == filePath.length - 12;//'/favicon.ico'.length 
                 if (err || !stat.isFile()) {
                     emitter.emit('error', me.do404, 'not found: ' + filePath);
                     return;
@@ -162,21 +161,6 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages) {
             });
         };
 
-        var downloadAndTry = function(params) {
-            var targetDir = path.dirname(params.src);
-            fs.exists(targetDir, function(exists) {
-                if (!exists) {
-                    util.mkdirP(targetDir, 0755, function(err) {
-                        if (err) {
-                        } else {
-                            var url = params.url.substring(1);
-                            util.download
-                        }
-                    });
-                }
-            });
-        };
-
         var serveImage = function(params) {
             if (typeof params.args === 'undefined') {
                 //original
@@ -188,9 +172,17 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages) {
     
         var downloadAndTry = function(params) {
             var url = params.remoteUrl;
+            if (!url) {
+                emitter.emit('error', me.do500, 'Not remote resource. Cannot download');
+                return;
+            }
+
             var output = params.src;
             util.downloadAnd(url, output, function(err) {
+                console.log(typeof err);
+                console.log(err);
                 if (err) {
+                    emitter.emit('error', me.do500, 'Failed to download: '+url);
                 } else {
                     serveImage(params);
                 }
@@ -202,17 +194,24 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages) {
                 emitter.emit('error', me.do501);
                 return;
             }
-            
+
+            if (request.url === '/favicon.ico') {
+                emitter.emit('error', me.do404);
+                return;
+            }
+
             var url = request.url;
             var parsed = urlParser.parse(request.url);
             var src = parsed.src;
-            var isRemoteSrc = parsed.isRemote;
+            var isRemoteSrc = !!parsed.remoteUrl;
 
             fs.exists(src, function(exists) {
-                if (!exists && isRemoteSrc) {
+                if (exists) {
+                    serveImage(parsed);
+                } else if (isRemoteSrc) {
                     downloadAndTry(parsed);
                 } else {
-                    serveImage(parsed);
+                    emitter.emit('error', me.do500, 'Image does not exist and cannot be downloaded from remote: '+src);
                 }
             });
 
@@ -232,8 +231,10 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages) {
         var handler = Handler(request, response);
         handler.emitter.on('error', function(f, msg) {
             if (typeof f === 'function') {
-                console.log(msg);
-                f();
+                if (typeof msg !== 'undefined') {
+                    console.log(msg);
+                }
+                f(msg);
             }
         });
         handler.start();

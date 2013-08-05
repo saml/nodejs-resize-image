@@ -91,7 +91,12 @@ var downloadAnd = function(url, target, callback) {
                         GET = https.get;
                     }
                     console.log('downloading %s => %s', url, target);
-                    GET(url, function(resp) {
+                    var request = GET(url, function(resp) {
+                        if (resp.statusCode !== 200) {
+                            callback(new Error("remote server didn't respond with 200: "+url));
+                            return;
+                        }
+
                         //maybe download to /tmp and rename.
                         var file = fs.createWriteStream(target);
                         resp.on('data', function(chunk) {
@@ -100,6 +105,10 @@ var downloadAnd = function(url, target, callback) {
                             file.end();
                             callback(null);
                         });
+                    });
+                    request.setTimeout(5000);
+                    request.on('error', function(err) {
+                        callback(err); 
                     });
                 }
             });

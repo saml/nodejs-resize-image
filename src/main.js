@@ -46,7 +46,8 @@ var main = function() {
     process.on('SIGQUIT', exit);
     //process.on('uncaughtException', function(err) {
     //    console.log(err);
-    //    exit(1);
+    //    console.log(err.stack);
+    //    //exit(1);
     //});
     server.start(host, port);
 };
