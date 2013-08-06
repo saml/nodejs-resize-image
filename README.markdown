@@ -22,22 +22,30 @@ Other parameters:
 Parameter | Crops At | Example | Comment
 ----------|----------|---------|---------
  | Center | GET /some/image.10x20.jpg | Not specifying a parameter crops at center.
-t | No Crop | GET /some/image.100x400t.jpg | Instead of cropping, some/image.jpg is resized to fit in 100x400 rectangle.
 n | North | GET /a/b.100x400n.jpg |
-ne | NorthEast | GET /a/b.100x400ne.jpg |
-se | SouthEast | GET /a/b.100x400se.jpg |
 s | South | GET /a/b.100x400s.jpg |
-sw | SouthWest | GET /a/b.100x400sw.jpg |
 w | West | GET /a/b.100x400w.jpg |
-nw | NorthWest | GET /a/b.100x400nw.jpg |
+e | East | GET /a/b.100x400e.jpg |
+t | No Crop | GET /some/image.100x400t.jpg | Instead of cropping, some/image.jpg is resized to fit in 100x400 rectangle.
 
 # Example
 
-- [300x300 cropped to center](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300.jpg)
-- [300x300 thumbnail](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300t.jpg)
-- [300x300 cropped to west](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300w.jpg)
-- [300x300 cropped to east](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300e.jpg)
-- [300x300 cropped to north](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300n.jpg)
+- [original is horizontal.](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.jpg)
+- Horizontal to square:
+    - [300x300 cropped to center](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300.jpg)
+    - [300x300 cropped to west](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300w.jpg)
+    - [300x300 cropped to east](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300e.jpg)
+    - [300x300 cropped to north](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300n.jpg)
+    - [300x300 cropped to south](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300s.jpg)
+    - [300x300 thumbnail](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300t.jpg)
+- Horizontal to vertical:
+    - [200x500 cropped to center](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.200x500.jpg)
+    - [200x500 cropped to west](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.200x500w.jpg)
+    - [200x500 cropped to east](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.200x500e.jpg)
+- Horizontal to horizontal:
+    - [500x281 cropped to center](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.500x281.jpg)
+    - [500x281 cropped to north](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.500x281n.jpg)
+    - [500x281 cropped to south](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.500x281s.jpg)
 
 # Quickstart
 

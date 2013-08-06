@@ -59,16 +59,12 @@ var Module = function(srcDir, destDir, maxOutputSize) {
     var CropParser = function() {
         var me = {};
 
-        var UrlRE = /^\/(.+)\.(\d+)x(\d+)(n|nw|w|sw|s|se|e|ne)?(\.\w+)$/;
+        var UrlRE = /^\/(.+)\.(\d+)x(\d+)(n|w|s|e)?(\.\w+)$/;
         var GravityMap = {
             n: 'North',
-            nw: 'NorthWest',
             w: 'West',
-            sw: 'SouthWest',
             s: 'South',
-            se: 'SouthEast',
             e: 'East',
-            ne: 'NorthEast'
         };
 
         var getGravity = function(key) {
