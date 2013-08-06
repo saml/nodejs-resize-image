@@ -39,9 +39,9 @@ t | No Crop | GET /some/image.100x400t.jpg | Instead of cropping, some/image.jpg
     - [300x300 cropped to south](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300s.jpg)
     - [300x300 thumbnail](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300t.jpg)
 - Horizontal to vertical:
-    - [200x500 cropped to center](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.200x500.jpg)
-    - [200x500 cropped to west](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.200x500w.jpg)
-    - [200x500 cropped to east](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.200x500e.jpg)
+    - [320x480 cropped to center](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.320x480.jpg)
+    - [320x480 cropped to west](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.320x480w.jpg)
+    - [320x480 cropped to east](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.320x480e.jpg)
 - Horizontal to horizontal:
     - [500x281 cropped to center](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.500x281.jpg)
     - [500x281 cropped to north](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.500x281n.jpg)
