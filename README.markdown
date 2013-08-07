@@ -35,8 +35,6 @@ t | No Crop | GET /some/image.100x400t.jpg | Instead of cropping, some/image.jpg
     - [300x300 cropped to center](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300.jpg)
     - [300x300 cropped to west](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300w.jpg)
     - [300x300 cropped to east](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300e.jpg)
-    - [300x300 cropped to north](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300n.jpg)
-    - [300x300 cropped to south](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300s.jpg)
     - [300x300 thumbnail](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.300x300t.jpg)
 - Horizontal to vertical:
     - [320x480 cropped to center](http://nodejs-resize-image.herokuapp.com/http://i.imgur.com/gWthS3m.320x480.jpg)
