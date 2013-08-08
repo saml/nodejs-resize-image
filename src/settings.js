@@ -15,6 +15,8 @@ config.cacheImages = true;
 //maximum supported output image size.
 config.maxOutputSize = 1200;
 
+config.debug = false;
+
 var localConfig = {};
 try {
     localConfig = require('./settings.local');

@@ -6,6 +6,7 @@ var events = require('events');
 
 var util = require('./util');
 var UrlParser = require('./UrlParser');
+var settings = require('./settings');
 
 var Server = function(convertCmd, srcDir, destDir, cacheImages, maxOutputSize) {
     var me = {};
@@ -150,7 +151,7 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages, maxOutputSize) {
 
         var serveCachedImageOrGenerate = function(param) {
             fs.exists(param.out, function(exists) {
-                if (exists) {
+                if (exists && !settings.debug) {
                     serveCachedImage(param.out);
                 } else {
                     resizeImage(param.src, param.out, param.args, function() {

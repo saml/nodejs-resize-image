@@ -59,12 +59,16 @@ var Module = function(srcDir, destDir, maxOutputSize) {
     var CropParser = function() {
         var me = {};
 
-        var UrlRE = /^\/(.+)\.(\d+)x(\d+)(n|w|s|e)?(\.\w+)$/;
+        var UrlRE = /^\/(.+)\.(\d+)x(\d+)(n|w|s|e|nw|ne|sw|se)?(\.\d+)?(\.\w+)$/;
         var GravityMap = {
             n: 'North',
             w: 'West',
             s: 'South',
             e: 'East',
+            nw: 'NorthWest',
+            ne: 'NorthEast',
+            sw: 'SouthWest',
+            se: 'SouthEast'
         };
 
         var getGravity = function(key) {
@@ -72,6 +76,26 @@ var Module = function(srcDir, destDir, maxOutputSize) {
                 return 'Center';
             }
             return GravityMap[key];
+        };
+
+        var MIN_CROP_PERCENT = 10;
+        var MAX_CROP_PERCENT = 100;
+
+        var getCropPercentage = function(percent) {
+            if (typeof percent === 'undefined') {
+                return undefined;
+            }
+            percent = percent.substring(1) * 1;//get rid of leading dot.
+            if (Number.isNaN(percent)) {
+                return undefined;
+            }
+            if (percent <= MIN_CROP_PERCENT) {
+                return MIN_CROP_PERCENT; 
+            }
+            if (percent >= MAX_CROP_PERCENT) {
+                return MAX_CROP_PERCENT;
+            }
+            return percent;
         };
 
         me.parse = function(url) {
@@ -84,19 +108,29 @@ var Module = function(srcDir, destDir, maxOutputSize) {
             var width = size.width;
             var height = size.height;
             var gravity = getGravity(m[4]);
-            var ext = m[5];
+            var cropPercentage = getCropPercentage(m[5]);
+            var ext = m[6];
             var imgId = m[1] + ext;
 
             var src = getImgPath(imgId);
             var out = getOutputPath(url);
             var remoteUrl = getRemoteOriginUrl(imgId);
+
+            var initialResizeWidth = width;
+            var initialResizeHeight = height;
+            if (cropPercentage) {
+                var initialCropRatio = -1/100 * cropPercentage + 2;
+                initialResizeWidth = Math.floor(width * initialCropRatio);
+                initialResizeHeight = Math.floor(height * initialCropRatio);
+            }
+
             return ({
                 remoteUrl: remoteUrl,
                 width: width,
                 height: height,
                 src: src,
                 out: out,
-                args: ['-resize', '%sx%s^'.f(width, height), 
+                args: ['-resize', '%sx%s^'.f(initialResizeWidth, initialResizeHeight), 
                     '-gravity', gravity,
                     '-crop', '%sx%s+0+0'.f(width, height),
                     '+repage']

@@ -14,6 +14,7 @@ var main = function() {
     var baseDir = process.cwd();//__dirname;
     var cacheImages = settings.cacheImages;
     var maxOutputSize = settings.maxOutputSize;
+    var debug = settings.debug;
 
     if (!srcDir.startsWith('/')) {
         srcDir = path.join(baseDir, srcDir);
@@ -32,6 +33,7 @@ var main = function() {
                 + '  destDir        %s\n'.f(destDir)
                 + '  cacheImages    %s\n'.f(cacheImages)
                 + '  maxOutputSize  %s\n'.f(maxOutputSize)
+                + '  debug          %s\n'.f(debug)
     );
 
     var server = Server(convertCmd, srcDir, destDir, cacheImages, maxOutputSize);
