@@ -13,7 +13,7 @@ config.destDir = './tmp/';
 config.cacheImages = true;
 
 //maximum supported output image size.
-config.maxOutputSize = 1200;
+config.maxOutputSize = 2000;
 
 config.debug = false;
 
