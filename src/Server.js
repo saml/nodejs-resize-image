@@ -195,6 +195,10 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages, maxOutputSize) {
 
             var url = request.url;
             var parsed = urlParser.parse(request.url);
+            if (!parsed) {
+                emitter.emit('error', me.do404);
+                return;
+            }
             var src = parsed.src;
             var isRemoteSrc = !!parsed.remoteUrl;
 

@@ -130,7 +130,7 @@ var Module = function(srcDir, destDir, maxOutputSize) {
                 height: height,
                 src: src,
                 out: out,
-                args: ['-resize', '%sx%s^'.f(initialResizeWidth, initialResizeHeight), 
+                args: ['-coalesce', '-resize', '%sx%s^'.f(initialResizeWidth, initialResizeHeight), 
                     '-gravity', gravity,
                     '-crop', '%sx%s+0+0'.f(width, height),
                     '+repage']
@@ -167,7 +167,7 @@ var Module = function(srcDir, destDir, maxOutputSize) {
                 height: height,
                 src: src,
                 out: out,
-                args: ['-resize', '%sx%s>'.f(width, height)]
+                args: ['-coalesce', '-resize', '%sx%s>'.f(width, height)]
             });
         };
         return me;
