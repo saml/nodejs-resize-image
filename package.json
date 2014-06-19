@@ -1,7 +1,11 @@
 {
-  "name": "myapp",
-  "version": "0.0.1",
-  "engines": {
-    "node": "0.10.x"
-  }
+    "name": "nodejs-resize-image",
+    "version": "0.0.1",
+    "description": "wanna resize",
+    "repository": {
+        "type": "git"
+    },
+    "engines": {
+        "node": "0.10.x"
+    }
 }
