@@ -5,6 +5,9 @@
     "repository": {
         "type": "git"
     },
+    "scripts": {
+        "start": "node src/main.js"
+    },
     "engines": {
         "node": "0.10.x"
     }
