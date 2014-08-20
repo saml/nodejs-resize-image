@@ -7,28 +7,13 @@ var events = require('events');
 var util = require('./util');
 var UrlParser = require('./UrlParser');
 var settings = require('./settings');
+var mimetypes = require('./mimetypes');
 
 var Server = function(convertCmd, srcDir, destDir, cacheImages, maxOutputSize) {
     var me = {};
 
     var urlParser = UrlParser(srcDir, destDir, maxOutputSize);
 
-    var getMimeType = function(name) {
-        var ext = path.extname(name).toLowerCase();
-        switch (ext) {
-        case '.jpg':
-        case '.jpeg':
-            return 'image/jpeg';
-        case '.png':
-            return 'image/png';
-        case '.gif':
-            return 'image/gif';
-        case '.tif':
-        case '.tiff':
-            return 'image/tiff';
-        }
-        return 'application/octet-stream';
-    };
 
     //handles request.
     var Handler = function(request, response) {
@@ -39,7 +24,7 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages, maxOutputSize) {
 
         var serveFile = function(filePath, mimeType, callback) {
             if (!mimeType) {
-                mimeType = getMimeType(filePath);
+                mimeType = mimetypes.fromPath(filePath);
             }
 
             var encoding = 'binary';
@@ -224,19 +209,16 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages, maxOutputSize) {
 
 
 
-    me.server = http.createServer(function(request, response) {
-        var handler = Handler(request, response);
-        handler.emitter.on('error', function(f, msg) {
-            if (typeof f === 'function') {
-                if (typeof msg !== 'undefined') {
-                    console.log(msg);
-                }
-                f(msg);
-            }
-        });
-        handler.start();
-    });
 
+  function onEachRequest(req, resp) {
+    var handler = Handler(req, resp);
+    handler.emitter.on('error', onError);
+    handler.start();
+  }
+
+
+    me.server = http.createServer(onEachRequest);
+   
     me.server.on('close', function() {
         console.log('Server stopped');
     });
@@ -257,5 +239,14 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages, maxOutputSize) {
 
     return me;
 };
+
+function onError(f, msg) {
+  if (typeof f === 'function') {
+    if (typeof msg !== 'undefined') {
+      console.log(msg);
+    }
+    f(msg);
+  }
+}
 
 module.exports = Server;
