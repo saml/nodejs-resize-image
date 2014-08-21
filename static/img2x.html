@@ -60,10 +60,10 @@ function createAnchor(url, text) {
 }
 
 
-function appendImage(cellSize, rendition, url, parentElem) {
+function appendImage(cellWidth, cellHeight, rendition, url, parentElem) {
   var cell = document.createElement('div');
   cell.className = 'cell';
-  cell.style.width = cellSize + 'px';
+  cell.style.width = cellWidth + 'px';
 
   function append(img, size) {
 
@@ -140,13 +140,17 @@ var query = parseQueryString();
 var url = query.url;
 
 
-var cellSize = parseInt(query.w, 10) || 300;
+var cellWidth = parseInt(query.w, 10) || 300;
+var cellHeight = parseInt(query.h, 10) || 300;
 var renditions = parseRenditions(query.r);
 
 var container = document.getElementById('container');
 
 renditions.forEach(function(rendition) {
-  appendImage(cellSize, rendition, getRendition(url, rendition.size, rendition.size, false, rendition.quality), container);
+  var renditionHeight = rendition.size * cellHeight/cellWidth;
+  var renditionUrl = getRendition(url, rendition.size, renditionHeight, false, rendition.quality);
+  
+  appendImage(cellWidth, cellHeight, rendition, renditionUrl, container);
 });
 </script>
 
