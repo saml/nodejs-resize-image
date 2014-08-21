@@ -3,6 +3,7 @@ var fs = require('fs');
 var path = require('path');
 var child = require('child_process');
 var events = require('events');
+var urlutil = require('url');
 
 var util = require('./util');
 var UrlParser = require('./UrlParser');
@@ -171,7 +172,8 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages, maxOutputSize, s
         var staticPrefix = '/static/';
         var start = function() {
           if (request.url.startsWith(staticPrefix)) {
-            var filePath = path.join(staticDir, request.url.substring(staticPrefix.length));
+            var urlPath = urlutil.parse(request.url).pathname;
+            var filePath = path.join(staticDir, urlPath.substring(staticPrefix.length));
             serveFile(filePath);
           } else {
 

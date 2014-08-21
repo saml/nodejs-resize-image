@@ -42,7 +42,7 @@ function parseQueryString(query) {
 }
 
 function parseAssetUrl(url) {
-  var regex = new RegExp('([^.]+)(\\.\\w+)$');
+  var regex = new RegExp('^(.+)(\\.\\w+)$');
   var m = regex.exec(url);
   return m;
 }
@@ -57,21 +57,20 @@ function getRendition(url, width, height, isNoCrop, quality) {
   var withoutExt = parsed[1];
   var ext = parsed[2];
 
-  var specs = [];
-  if (isNoCrop) {
-    specs.push('nocrop');
-  }
-  if (!isNaN(width)) {
-    specs.push('w'+width);
-  }
-  if (!isNaN(height)) {
-    specs.push('h'+height);
-  }
-  if (is2x) {
-    specs.push('2x');
+  var args = [];
+  if (!isNaN(width) && !isNaN(height)) {
+    var dimension = width+'x'+height;
+    if (isNoCrop) {
+      dimension += 't';
+    }
+    args.push(dimension);
   }
 
-  return 'http://'+hostname+'/imgs/'+assetId+'.'+specs.join('.')+ext;
+  if (!isNaN(quality)) {
+    args.push('q'+quality);
+  }
+
+  return '/'+withoutExt+'.'+args.join('.')+ext;
 }
 
 function createAnchor(url, text) {
@@ -81,25 +80,63 @@ function createAnchor(url, text) {
   return a;
 }
 
+
 function appendImage(url, parentElem) {
-  var img = new Image();
-  img.addEventListener('load', function() {
-    parentElem.appendChild(document.createElement('br'));
-    parentElem.appendChild(document.createTextNode(img.naturalWidth+'x'+img.naturalHeight+' | '+img.width+'x'+img.height));
-    parentElem.appendChild(document.createElement('br'));
-    parentElem.appendChild(createAnchor(url));
-  });
-  img.src = url;
-  parentElem.appendChild(img);
+  function append(img, size) {
+    img.addEventListener('load', function() {
+      var kb = toKilobyte(size);
+      parentElem.appendChild(img);
+      parentElem.appendChild(document.createElement('br'));
+
+      var msg = img.naturalWidth+'x'+img.naturalHeight+' | '+img.clientWidth+'x'+img.clientHeight+' | '+kb+'kb';
+      parentElem.appendChild(document.createTextNode(msg));
+      parentElem.appendChild(document.createElement('br'));
+
+      parentElem.appendChild(createAnchor(url));
+    });
+  }
+
+  loadImage(url, append);
 }
+
+function toKilobyte(size) {
+  var kilobytes = size / Math.pow(2, 10);
+  var digits = Math.log(kilobytes) / Math.LN10 + 1;
+  return kilobytes.toPrecision(digits+2);
+}
+
+function loadImage(url, onSuccess) {
+  var xhr = new XMLHttpRequest();
+  xhr.responseType = 'blob';
+
+  xhr.addEventListener('load', function() {
+    var blob = xhr.response;
+
+    var reader = new FileReader();
+    reader.addEventListener('loadend', function() {
+      var blobBase64 = reader.result;
+      var img = new Image();
+      img.src = blobBase64;
+      if (typeof onSuccess == 'function') {
+        var size = parseInt(xhr.getResponseHeader('Content-Length'), 10) || blob.size;
+        onSuccess(img, size);
+      }
+    });
+
+    reader.readAsDataURL(xhr.response);
+  });
+  xhr.open('GET', url);
+  xhr.send();
+}
+
 
 var query = parseQueryString();
 var url = query.url;
 var width = parseInt(query.width, 10) || 200;
 var height = parseInt(query.height, 10) || 200;
 
-appendImage(getRendition(url, width, height), document.getElementById('img'));
-appendImage(getRendition(url, width, height, false, true), document.getElementById('img-2x'));
-appendImage(getRendition(url, width*2, height*2), document.getElementById('img-x2'));
+appendImage(getRendition(url, width, height, false, 20), document.getElementById('img'));
+appendImage(getRendition(url, width, height, false, 30), document.getElementById('img-2x'));
+appendImage(getRendition(url, width, height, false, 50), document.getElementById('img-x2'));
 </script>
 
