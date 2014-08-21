@@ -200,6 +200,9 @@ var Module = function(srcDir, destDir, maxOutputSize) {
         var UrlRE = /^\/(.+\.\w+)$/;
         me.parse = function(url) {
             var m = UrlRE.exec(url);
+            if (!m) {
+              return null;
+            }
             var imgId = m[1];
             var src = getImgPath(imgId);
             var remoteUrl = getRemoteOriginUrl(imgId);
