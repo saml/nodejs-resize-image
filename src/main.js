@@ -11,6 +11,7 @@ var main = function() {
     var convertCmd = settings.convertCmd;
     var srcDir = settings.srcDir;
     var destDir = settings.destDir;
+    var staticDir = settings.staticDir;
     var baseDir = process.cwd();//__dirname;
     var cacheImages = settings.cacheImages;
     var maxOutputSize = settings.maxOutputSize;
@@ -22,6 +23,9 @@ var main = function() {
     if (!destDir.startsWith('/')) {
         destDir = path.join(baseDir, destDir);
     }
+    if (!staticDir.startsWith('/')) {
+      staticDir = path.join(baseDir, staticDir);
+    }
 
 
 
@@ -29,6 +33,7 @@ var main = function() {
                 + '  host           %s\n'.f(host)
                 + '  port           %s\n'.f(port)
                 + '  convert cmd    %s\n'.f(convertCmd)
+                + '  staticDir      %s\n'.f(staticDir)
                 + '  srcDir         %s\n'.f(srcDir)
                 + '  destDir        %s\n'.f(destDir)
                 + '  cacheImages    %s\n'.f(cacheImages)
@@ -36,7 +41,7 @@ var main = function() {
                 + '  debug          %s\n'.f(debug)
     );
 
-    var server = Server(convertCmd, srcDir, destDir, cacheImages, maxOutputSize);
+    var server = Server(convertCmd, srcDir, destDir, cacheImages, maxOutputSize, staticDir);
     var exit = function(ret) {
         if (typeof ret === 'undefined') {
             ret = 0;

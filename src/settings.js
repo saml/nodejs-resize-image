@@ -12,6 +12,9 @@ config.destDir = './tmp/';
 //whether to leave generated thumbnails or not.
 config.cacheImages = true;
 
+// where static files are located.
+config.staticDir = './static/';
+
 //maximum supported output image size.
 config.maxOutputSize = 2000;
 

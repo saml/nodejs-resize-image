@@ -9,7 +9,7 @@ var UrlParser = require('./UrlParser');
 var settings = require('./settings');
 var mimetypes = require('./mimetypes');
 
-var Server = function(convertCmd, srcDir, destDir, cacheImages, maxOutputSize) {
+var Server = function(convertCmd, srcDir, destDir, cacheImages, maxOutputSize, staticDir) {
     var me = {};
 
     var urlParser = UrlParser(srcDir, destDir, maxOutputSize);
@@ -167,7 +167,14 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages, maxOutputSize) {
             });
         };
 
+
+        var staticPrefix = '/static/';
         var start = function() {
+          if (request.url.startsWith(staticPrefix)) {
+            var filePath = path.join(staticDir, request.url.substring(staticPrefix.length));
+            serveFile(filePath);
+          } else {
+
             if (request.method !== 'GET') {
                 emitter.emit('error', me.do501);
                 return;
@@ -196,7 +203,7 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages, maxOutputSize) {
                     emitter.emit('error', me.do500, 'Image does not exist and cannot be downloaded from remote: '+src);
                 }
             });
-
+          }
         };
 
         me.start = function() {

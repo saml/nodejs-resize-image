@@ -1,0 +1,105 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Image Quality Test</title>
+<style>
+#container {
+  display: flex;
+}
+#img { 
+  width: 30%;
+  float: left; 
+  text-align: center;
+}
+#img-2x { 
+  width: 30%;
+  display: inline-block;
+  text-align: center;
+}
+#img-x2 {
+  width: 30%;
+  float: right; 
+  text-align: center;
+}
+img {
+  width: 100%;
+}
+</style>
+<div id="container">
+  <div id="img"></div>
+  <div id="img-2x"></div>
+  <div id="img-x2"></div>
+</div>
+<script>
+function parseQueryString(query) {
+  query = query || window.location.search.substring(1);
+
+  var args = {};
+  query.split(/&/).forEach(function(kv) {
+    var splitted = kv.split(/=/);
+    args[splitted[0]] = splitted[1];
+  });
+  return args;
+}
+
+function parseAssetUrl(url) {
+  var regex = new RegExp('([^.]+)(\\.\\w+)$');
+  var m = regex.exec(url);
+  return m;
+}
+
+function getRendition(url, width, height, isNoCrop, quality) {
+  var parsed = parseAssetUrl(url);
+  if (!parsed) {
+    return null;
+  }
+
+
+  var withoutExt = parsed[1];
+  var ext = parsed[2];
+
+  var specs = [];
+  if (isNoCrop) {
+    specs.push('nocrop');
+  }
+  if (!isNaN(width)) {
+    specs.push('w'+width);
+  }
+  if (!isNaN(height)) {
+    specs.push('h'+height);
+  }
+  if (is2x) {
+    specs.push('2x');
+  }
+
+  return 'http://'+hostname+'/imgs/'+assetId+'.'+specs.join('.')+ext;
+}
+
+function createAnchor(url, text) {
+  var a = document.createElement('a');
+  a.href = url;
+  a.innerHTML = text || url;
+  return a;
+}
+
+function appendImage(url, parentElem) {
+  var img = new Image();
+  img.addEventListener('load', function() {
+    parentElem.appendChild(document.createElement('br'));
+    parentElem.appendChild(document.createTextNode(img.naturalWidth+'x'+img.naturalHeight+' | '+img.width+'x'+img.height));
+    parentElem.appendChild(document.createElement('br'));
+    parentElem.appendChild(createAnchor(url));
+  });
+  img.src = url;
+  parentElem.appendChild(img);
+}
+
+var query = parseQueryString();
+var url = query.url;
+var width = parseInt(query.width, 10) || 200;
+var height = parseInt(query.height, 10) || 200;
+
+appendImage(getRendition(url, width, height), document.getElementById('img'));
+appendImage(getRendition(url, width, height, false, true), document.getElementById('img-2x'));
+appendImage(getRendition(url, width*2, height*2), document.getElementById('img-x2'));
+</script>
+

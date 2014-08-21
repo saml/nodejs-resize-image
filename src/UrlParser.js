@@ -56,10 +56,24 @@ var Module = function(srcDir, destDir, maxOutputSize) {
         return m[1] + '://' + m[2];
     };
 
+    function getQuality(str) {
+      if (str && str.startsWith('.q')) {
+        return parseInt(str.substring(2), 10);
+      }
+      return null;
+    }
+
+    function maybeAddQuality(args, quality) {
+      if (quality) {
+        args.push('-quality');
+        args.push(quality);
+      }
+    }
+
     var CropParser = function() {
         var me = {};
 
-        var UrlRE = /^\/(.+)\.(\d+)x(\d+)(n|w|s|e|nw|ne|sw|se)?(\.\d+)?(\.\w+)$/;
+        var UrlRE = /^\/(.+)\.(\d+)x(\d+)(n|w|s|e|nw|ne|sw|se)?(\.\d+)?(\.q\d+)?(\.\w+)$/;
         var GravityMap = {
             n: 'North',
             w: 'West',
@@ -109,7 +123,8 @@ var Module = function(srcDir, destDir, maxOutputSize) {
             var height = size.height;
             var gravity = getGravity(m[4]);
             var cropPercentage = getCropPercentage(m[5]);
-            var ext = m[6];
+            var quality = getQuality(m[6]);
+            var ext = m[7];
             var imgId = m[1] + ext;
 
             var src = getImgPath(imgId);
@@ -124,16 +139,19 @@ var Module = function(srcDir, destDir, maxOutputSize) {
                 initialResizeHeight = Math.floor(height * initialCropRatio);
             }
 
+            var args = ['-coalesce', '-resize', '%sx%s^'.f(initialResizeWidth, initialResizeHeight), 
+                    '-gravity', gravity,
+                    '-crop', '%sx%s+0+0'.f(width, height),
+                    '+repage'];
+            maybeAddQuality(args, quality);
+
             return ({
                 remoteUrl: remoteUrl,
                 width: width,
                 height: height,
                 src: src,
                 out: out,
-                args: ['-coalesce', '-resize', '%sx%s^'.f(initialResizeWidth, initialResizeHeight), 
-                    '-gravity', gravity,
-                    '-crop', '%sx%s+0+0'.f(width, height),
-                    '+repage']
+                args: args
             });
         };
         return me;
@@ -142,7 +160,7 @@ var Module = function(srcDir, destDir, maxOutputSize) {
     var ThumbnailParser = function() {
         var me = {};
 
-        var UrlRE = /^\/(.+)\.(\d+)x(\d+)t(\.\w+)$/;
+        var UrlRE = /^\/(.+)\.(\d+)x(\d+)t(\.q\d+)?(\.\w+)$/;
 
         me.parse = function(url) {
             var m = UrlRE.exec(url);
@@ -154,12 +172,16 @@ var Module = function(srcDir, destDir, maxOutputSize) {
             var size = normalizeSize(m[2]*1, m[3]*1);
             var width = size.width;
             var height = size.height;
-            var ext = m[4];
+            var quality = getQuality(m[4]);
+            var ext = m[5];
             var imgId = m[1] + ext;
 
             var src = getImgPath(imgId);
             var out = getOutputPath(url);
             var remoteUrl = getRemoteOriginUrl(imgId);
+
+            var args = ['-coalesce', '-resize', '%sx%s>'.f(width, height)];
+            maybeAddQuality(args, quality);
 
             return ({
                 remoteUrl: remoteUrl,
@@ -167,7 +189,7 @@ var Module = function(srcDir, destDir, maxOutputSize) {
                 height: height,
                 src: src,
                 out: out,
-                args: ['-coalesce', '-resize', '%sx%s>'.f(width, height)]
+                args: args
             });
         };
         return me;

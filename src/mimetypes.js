@@ -5,7 +5,9 @@ var EXTENSIONS = {
   '.jpeg': 'image/jpeg',
   '.png': 'image/png',
   '.gif': 'image/gif',
-  '.tif': 'image/tiff'
+  '.tif': 'image/tiff',
+  '.html': 'text/html',
+  '.htm': 'text/html'
 };
 
 function getMimeType(name) {
