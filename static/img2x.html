@@ -60,7 +60,7 @@ function createAnchor(url, text) {
 }
 
 
-function appendImage(cellSize, url, parentElem) {
+function appendImage(cellSize, rendition, url, parentElem) {
   function append(img, size) {
     var cell = document.createElement('div');
     cell.className = 'cell';
@@ -70,17 +70,17 @@ function appendImage(cellSize, url, parentElem) {
       var kb = toKilobyte(size);
       cell.appendChild(document.createElement('br'));
 
-      var msg = img.naturalWidth+'x'+img.naturalHeight+' | '+kb+'kb';
+      var msg = img.naturalWidth+'x'+img.naturalHeight+' | q'+rendition.quality+' | '+kb+'kb';
       cell.appendChild(document.createTextNode(msg));
       cell.appendChild(document.createElement('br'));
 
       cell.appendChild(createAnchor(url));
 
-      parentElem.appendChild(cell);
     });
 
 
     cell.appendChild(img);
+    parentElem.appendChild(cell);
   }
 
   loadImage(url, append);
@@ -144,7 +144,7 @@ var renditions = parseRenditions(query.r);
 var container = document.getElementById('container');
 
 renditions.forEach(function(rendition) {
-  appendImage(cellSize, getRendition(url, rendition.size, rendition.size, false, rendition.quality), container);
+  appendImage(cellSize, rendition, getRendition(url, rendition.size, rendition.size, false, rendition.quality), container);
 });
 </script>
 
