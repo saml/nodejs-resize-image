@@ -35,10 +35,18 @@ var Server = function(convertCmd, srcDir, destDir, cacheImages, maxOutputSize, s
                     emitter.emit('error', me.do404, 'not found: ' + filePath);
                     return;
                 }
+                
+                var ifModifiedSince = new Date(request.headers['if-modified-since']);
+                if (!isNaN(ifModifiedSince.getTime()) && ifModifiedSince >= stat.mtime) {
+                  response.writeHead(304);
+                  response.end();
+                  return;
+                } 
 
                 response.writeHead(200, {
-                    'Content-Type': mimeType
-                    , 'Content-Length': stat.size
+                  'Content-Type': mimeType, 
+                  'Content-Length': stat.size,
+                  'Last-Modified': stat.mtime
                 });
                 var stream = fs.createReadStream(filePath, {
                     flags: 'r'

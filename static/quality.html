@@ -3,8 +3,48 @@
 <title>Image Quality Curve</title>
 <style>
 </style>
+<canvas id="curve"></canvas>
 <div id="container">
 </div>
 <script src="utils.js"></script>
 <script>
+function getBezierFor(t, p0, p1, p2, p3) {
+  var i = 1-t;
+  
+  p0 = i*p0 + t*p1;
+  p1 = i*p1 + t*p2;
+  p2 = i*p2 + t*p3;
+
+  p0 = i*p0 + t*p1;
+  p1 = i*p1 + t*p2;
+  
+  return i*p0 + t*p1;
+}
+
+function drawBezier(ctx, p0, p1, p2, p3, interval) {
+  interval = interval || 0.1;
+
+  var p0x = p0.x;
+  var p0y = p0.y;
+  var p1x = p1.x;
+  var p1y = p1.y;
+  var p2x = p2.x;
+  var p2y = p2.y;
+  var p3x = p3.x;
+  var p3y = p3.y;
+
+  ctx.moveTo(p0.x, p0.y);
+  for (var i = 0; i < 1; i += interval) {
+    var x = getBezierFor(i, p0x, p1x, p2x, p3x);
+    var y = getBezierFor(i, p0y, p1y, p2y, p3y);
+    ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+
+var canvas = document.getElementById('curve');
+var ctx = canvas.getContext('2d');
+ctx.width = 500;
+ctx.height = 500;
+drawBezier(ctx, {x:10,y:10}, {x:50,y:100}, {x:150,y:200}, {x:200,y:75}, 0.05);
 </script>
