@@ -2,32 +2,11 @@
 <meta charset="utf-8">
 <title>Image Quality Test</title>
 <style>
-#container {
-  display: flex;
-}
-#img { 
-  width: 30%;
-  float: left; 
-  text-align: center;
-}
-#img-2x { 
-  width: 30%;
-  display: inline-block;
-  text-align: center;
-}
-#img-x2 {
-  width: 30%;
-  float: right; 
-  text-align: center;
-}
 img {
   width: 100%;
 }
 </style>
 <div id="container">
-  <div id="img"></div>
-  <div id="img-2x"></div>
-  <div id="img-x2"></div>
 </div>
 <script>
 function parseQueryString(query) {
@@ -81,19 +60,27 @@ function createAnchor(url, text) {
 }
 
 
-function appendImage(url, parentElem) {
+function appendImage(cellSize, url, parentElem) {
   function append(img, size) {
+    var cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.style.width = cellSize + 'px';
+
     img.addEventListener('load', function() {
       var kb = toKilobyte(size);
-      parentElem.appendChild(img);
-      parentElem.appendChild(document.createElement('br'));
+      cell.appendChild(document.createElement('br'));
 
-      var msg = img.naturalWidth+'x'+img.naturalHeight+' | '+img.clientWidth+'x'+img.clientHeight+' | '+kb+'kb';
-      parentElem.appendChild(document.createTextNode(msg));
-      parentElem.appendChild(document.createElement('br'));
+      var msg = img.naturalWidth+'x'+img.naturalHeight+' | '+kb+'kb';
+      cell.appendChild(document.createTextNode(msg));
+      cell.appendChild(document.createElement('br'));
 
-      parentElem.appendChild(createAnchor(url));
+      cell.appendChild(createAnchor(url));
+
+      parentElem.appendChild(cell);
     });
+
+
+    cell.appendChild(img);
   }
 
   loadImage(url, append);
@@ -129,14 +116,35 @@ function loadImage(url, onSuccess) {
   xhr.send();
 }
 
+function parseRenditions(str) {
+  var renditions = [];
+  if (!str) {
+    return renditions;
+  }
+
+  var regex = /^(\d+)q?(\d+)?$/;
+  str.split(',').forEach(function(x) {
+    var m = regex.exec(x);
+    if (m) {
+      var size = parseInt(m[1], 10);
+      var quality = parseInt(m[2], 10);
+      renditions.push({size: size, quality: quality});
+    }
+  });
+  return renditions;
+}
 
 var query = parseQueryString();
 var url = query.url;
-var width = parseInt(query.width, 10) || 200;
-var height = parseInt(query.height, 10) || 200;
 
-appendImage(getRendition(url, width, height, false, 20), document.getElementById('img'));
-appendImage(getRendition(url, width, height, false, 30), document.getElementById('img-2x'));
-appendImage(getRendition(url, width, height, false, 50), document.getElementById('img-x2'));
+
+var cellSize = parseInt(query.w, 10) || 300;
+var renditions = parseRenditions(query.r);
+
+var container = document.getElementById('container');
+
+renditions.forEach(function(rendition) {
+  appendImage(cellSize, getRendition(url, rendition.size, rendition.size, false, rendition.quality), container);
+});
 </script>
 
