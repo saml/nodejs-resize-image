@@ -61,10 +61,11 @@ function createAnchor(url, text) {
 
 
 function appendImage(cellSize, rendition, url, parentElem) {
+  var cell = document.createElement('div');
+  cell.className = 'cell';
+  cell.style.width = cellSize + 'px';
+
   function append(img, size) {
-    var cell = document.createElement('div');
-    cell.className = 'cell';
-    cell.style.width = cellSize + 'px';
 
     img.addEventListener('load', function() {
       var kb = toKilobyte(size);
@@ -80,9 +81,10 @@ function appendImage(cellSize, rendition, url, parentElem) {
 
 
     cell.appendChild(img);
-    parentElem.appendChild(cell);
   }
 
+
+  parentElem.appendChild(cell);
   loadImage(url, append);
 }
 
