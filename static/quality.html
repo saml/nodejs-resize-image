@@ -84,15 +84,24 @@ function pointFromStr(s) {
 }
 
 
-function BezierGraph(canvas, p0, p1, p2, p3, outputs) {
+function BezierGraph(canvas, p0, p1, p2, p3, config) {
   var ctx = canvas.getContext('2d');
   var points = [p0, p1, p2, p3];
   var draggablePoints = [p1, p2];
   var bound = canvas.getBoundingClientRect();
   var radius = 10;
-  var statOutput = outputs.stat;
-  var p1Output = outputs.p1;
-  var p2Output = outputs.p2;
+  var statOutput = config.stat;
+  var p1Output = config.p1;
+  var p2Output = config.p2;
+  var minQ = config.minQ;
+  var maxQ = config.maxQ;
+  var minArea = config.minS * config.minS;
+  var maxArea = config.maxS * config.maxS;
+  var qualityRange = maxQ - minQ;
+  var areaRange = maxArea - minArea;
+  var heightRange = p3.y - p0.y;
+  var widthRange = p3.x - p0.x;
+
 
   var pointBeingDragged = null;
 
@@ -127,6 +136,28 @@ function BezierGraph(canvas, p0, p1, p2, p3, outputs) {
     return Point(evt.offsetX,evt.offsetY);
   }
 
+  function getArea(x) {
+    var ratio = (x-p0.x)/widthRange;
+    if (ratio < 0) {
+      ratio = 0;
+    }
+    return toFractionPrecision(areaRange*ratio, 2);
+  }
+
+  function getQualityFor(area) {
+    if (area < minArea) {
+      return maxQ;
+    }
+    if (area > maxArea) {
+      return minQ;
+    }
+
+    var t = (area - minArea)/areaRange;
+    var y = getBezierFor(t, p0.y, p1.y, p2.y, p3.y);
+    var ratio = 1 - (y-p0.y)/heightRange;
+    return Math.ceil(qualityRange * ratio) + minQ;
+  }
+
   canvas.addEventListener('mousedown', function(evt) {
     var mouse = getMousePoint(evt);
     var x = mouse.x;
@@ -136,6 +167,7 @@ function BezierGraph(canvas, p0, p1, p2, p3, outputs) {
     if (p) {
       pointBeingDragged = p;
     }
+
   });
 
   canvas.addEventListener('mouseup', function(evt) {
@@ -146,8 +178,11 @@ function BezierGraph(canvas, p0, p1, p2, p3, outputs) {
     var mouse = getMousePoint(evt);
     var x = mouse.x;
     var y = mouse.y;
+
+    var area = getArea(x);
+    var quality = getQualityFor(area);
     
-    statOutput.innerHTML = x+','+y;
+    statOutput.innerHTML = x+','+y+' | x (area): '+area+' | y (quality): '+quality;
 
     if (pointBeingDragged) {
       pointBeingDragged.x = x;
@@ -163,9 +198,12 @@ function BezierGraph(canvas, p0, p1, p2, p3, outputs) {
 
   draw();
 
+  return {getQualityFor: getQualityFor};
 }
 
 var query = parseQueryString();
+var imgUrl = query.url || 'http://i.imgur.com/cxgoYSi.jpg';
+
 var canvas = document.getElementById('curve');
 canvas.width = 300;
 canvas.height = 300;
@@ -173,6 +211,10 @@ canvas.height = 300;
 var form = document.getElementById('form');
 var inputP1 = form.querySelector('input[name="p1"]');
 var inputP2 = form.querySelector('input[name="p2"]');
+var inputMinQ = form.querySelector('input[name="minQ"]');
+var inputMaxQ = form.querySelector('input[name="maxQ"]');
+var inputMinS = form.querySelector('input[name="minS"]');
+var inputMaxS = form.querySelector('input[name="maxS"]');
 
 
 var p0 = Point(20,20);
@@ -180,15 +222,29 @@ var p1 = pointFromStr(query.p1) || Point(100,100);
 var p2 = pointFromStr(query.p2) || Point(200,200);
 var p3 = Point(280,280);
 
+var minQ = parseInt(inputMinQ, 10) || 20;
+var maxQ = parseInt(inputMaxQ, 10) || 92;
+var minS = parseInt(inputMinS, 10) || 100;
+var maxS = parseInt(inputMaxS, 10) || 1200;
+
 inputP1.value = p1;
 inputP2.value = p2;
+
+inputMinQ.value = minQ;
+inputMaxQ.value = maxQ;
+inputMinS.value = minS;
+inputMaxS.value = maxS;
 
 var canvasStat = document.getElementById('curve-stat');
 
 var graph = BezierGraph(canvas, p0, p1, p2, p3, {
   stat: canvasStat,
   p1: inputP1,
-  p2: inputP2
+  p2: inputP2,
+  minQ: minQ,
+  maxQ: maxQ,
+  minS: minS,
+  maxS: maxS
 });
 
 </script>

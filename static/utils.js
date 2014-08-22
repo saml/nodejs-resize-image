@@ -48,11 +48,16 @@ function createAnchor(url, text) {
   return a;
 }
 
+function decimalDigits(num) {
+  return Math.max(Math.log(Math.floor(num)) / Math.LN10 + 1, 1);
+}
+
+function toFractionPrecision(num, precision) {
+  return num.toPrecision(decimalDigits(num) + precision);
+}
 
 function toKilobyte(size) {
-  var kilobytes = size / Math.pow(2, 10);
-  var digits = Math.log(kilobytes) / Math.LN10 + 1;
-  return kilobytes.toPrecision(digits+2);
+  return toFractionPrecision(size / Math.pow(2, 10), 2);
 }
 
 // loads image via xhr to get image byte size :P
