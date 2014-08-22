@@ -10,33 +10,6 @@ img {
 </div>
 <script src="utils.js"></script>
 <script>
-function appendImage(cellWidth, cellHeight, rendition, url, parentElem) {
-  var cell = document.createElement('div');
-  cell.className = 'cell';
-  cell.style.width = cellWidth + 'px';
-
-  function append(img, size) {
-
-    img.addEventListener('load', function() {
-      var kb = toKilobyte(size);
-      cell.appendChild(document.createElement('br'));
-
-      var msg = img.naturalWidth+'x'+img.naturalHeight+' | q'+rendition.quality+' | '+kb+'kb';
-      cell.appendChild(document.createTextNode(msg));
-      cell.appendChild(document.createElement('br'));
-
-      cell.appendChild(createAnchor(url));
-
-    });
-
-
-    cell.appendChild(img);
-  }
-
-
-  parentElem.appendChild(cell);
-  loadImage(url, append);
-}
 
 function parseRenditions(str) {
   var renditions = [];
@@ -70,7 +43,7 @@ renditions.forEach(function(rendition) {
   var renditionHeight = rendition.size * cellHeight/cellWidth;
   var renditionUrl = getRendition(url, rendition.size, renditionHeight, false, rendition.quality);
   
-  appendImage(cellWidth, cellHeight, rendition, renditionUrl, container);
+  appendImageCell(cellWidth, cellHeight, rendition.quality, renditionUrl, container);
 });
 </script>
 

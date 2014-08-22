@@ -48,6 +48,56 @@ function createAnchor(url, text) {
   return a;
 }
 
+function range(start, end, stepsFn) {
+  if (start === end) {
+    return [start, end];
+  }
+  
+  var shouldLoop = function() {
+    return start < end;
+  };
+  if (start > end) {
+    shouldLoop = function() {
+      return start > end;
+    };
+  }
+
+  if (typeof stepsFn !== 'function') {
+    stepsFn = function(x) { return x + 1; };
+  }
+  var arr = [];
+
+
+  while (shouldLoop()) {
+    arr.push(start);
+    start = stepsFn(start);
+  }
+  arr.push(end);
+  return arr;
+}
+
+function initFormInputFromQuery(query, key, form, defaultValue, name) {
+  name = name || key;
+
+  var input = form.querySelector('input[name="'+name+'"]');
+  var value = query[key];
+  if (typeof value === 'undefined') {
+    value = defaultValue;
+  }
+
+  if (input) {
+    input.value = value;
+  }
+  return input;
+}
+
+function commaSeparatedNumbers(str) {
+  if (str) {
+    return str.split(',').map(function(x) { return Number(x); });
+  }
+  return [];
+}
+
 function decimalDigits(num) {
   return Math.max(Math.log(Math.floor(num)) / Math.LN10 + 1, 1);
 }
@@ -85,4 +135,34 @@ function loadImage(url, onSuccess) {
   xhr.open('GET', url);
   xhr.send();
 }
+
+function appendImageCell(cellWidth, cellHeight, quality, url, parentElem) {
+  var cell = document.createElement('div');
+  cell.className = 'cell';
+  cell.style.width = cellWidth + 'px';
+
+  function append(img, size) {
+
+    img.addEventListener('load', function() {
+      var kb = toKilobyte(size);
+      cell.appendChild(document.createElement('br'));
+
+      var msg = img.naturalWidth+'x'+img.naturalHeight+' | q'+quality+' | '+kb+'kb';
+      cell.appendChild(document.createTextNode(msg));
+      cell.appendChild(document.createElement('br'));
+
+      cell.appendChild(createAnchor(url));
+
+    });
+
+
+    cell.appendChild(img);
+  }
+
+
+  parentElem.appendChild(cell);
+  loadImage(url, append);
+}
+
+
 

@@ -5,20 +5,26 @@
 #curve {
   border: 1px solid black;
 }
+img {
+  width: 100%;
+}
 </style>
 <div id="curve-stat">0,0</div>
 <canvas id="curve"></canvas>
 <form id="form">
   p1: <input type="text" name="p1">
-  p2: <input type="text" name="p2">
+  p2: <input type="text" name="p2"><br>
   Minimum Quality: <input type="text" name="minQ">
   Maximum Quality: <input type="text" name="maxQ">
   Minimum Width: <input type="text" name="minS">
-  Maximum Width: <input type="text" name="maxS">
+  Maximum Width: <input type="text" name="maxS"><br>
+  Image Url: <input type="text" name="url">
+  Cell Width: <input type="text" name="cellW">
+  Cell Height: <input type="text" name="cellH">
+  Rendition Widths: <input type="text" name="widths">
   <input type="submit">
 </form>
-<div id="container">
-</div>
+<div id="container"></div>
 <script src="utils.js"></script>
 <script>
 function getBezierFor(t, p0, p1, p2, p3) {
@@ -102,9 +108,24 @@ function BezierGraph(canvas, p0, p1, p2, p3, config) {
   var heightRange = p3.y - p0.y;
   var widthRange = p3.x - p0.x;
 
+  var imgUrl = config.url;
+  var imgContainer = config.container;
+  var widths = config.widths;
+  var cellW = config.cellW;
+  var cellH = config.cellH;
 
   var pointBeingDragged = null;
 
+  function drawRenditions() {
+    imgContainer.innerHTML = '';
+    widths.forEach(function(w) {
+      var h = w * cellH / cellW;
+      var area = w*h;
+      var quality = getQualityFor(area);
+      var url = getRendition(imgUrl, w, h, false, quality);
+      appendImageCell(cellW, cellH, quality, url, imgContainer);
+    });
+  }
 
   function findPointAt(x, y) {
     var arr = draggablePoints.filter(function(p) {
@@ -130,6 +151,7 @@ function BezierGraph(canvas, p0, p1, p2, p3, config) {
     });
 
     drawBezier(ctx, p0, p1, p2, p3, 0.01);
+
   }
 
   function getMousePoint(evt) {
@@ -197,45 +219,52 @@ function BezierGraph(canvas, p0, p1, p2, p3, config) {
   });
 
   draw();
+  drawRenditions();
 
   return {getQualityFor: getQualityFor};
 }
 
 var query = parseQueryString();
-var imgUrl = query.url || 'http://i.imgur.com/cxgoYSi.jpg';
 
 var canvas = document.getElementById('curve');
 canvas.width = 300;
 canvas.height = 300;
 
 var form = document.getElementById('form');
-var inputP1 = form.querySelector('input[name="p1"]');
-var inputP2 = form.querySelector('input[name="p2"]');
-var inputMinQ = form.querySelector('input[name="minQ"]');
-var inputMaxQ = form.querySelector('input[name="maxQ"]');
-var inputMinS = form.querySelector('input[name="minS"]');
-var inputMaxS = form.querySelector('input[name="maxS"]');
 
+var inputP1 =  initFormInputFromQuery(query, 'p1', form, Point(100,100));
+var inputP2 = initFormInputFromQuery(query, 'p2', form, Point(200,200));
+var inputMinQ = initFormInputFromQuery(query, 'minQ', form, 20);
+var inputMaxQ = initFormInputFromQuery(query, 'maxQ', form, 92);
+var inputMinS = initFormInputFromQuery(query, 'minS', form, 100);
+var inputMaxS = initFormInputFromQuery(query, 'maxS', form, 1200);
+var inputCellWidth = initFormInputFromQuery(query, 'cellW', form, 500);
+var inputCellHeight = initFormInputFromQuery(query, 'cellH', form, 500);
+var inputUrl = initFormInputFromQuery(query, 'url', form, 'http://i.imgur.com/cxgoYSi.jpg');
 
 var p0 = Point(20,20);
-var p1 = pointFromStr(query.p1) || Point(100,100);
-var p2 = pointFromStr(query.p2) || Point(200,200);
+var p1 = pointFromStr(inputP1.value);
+var p2 = pointFromStr(inputP2.value);
 var p3 = Point(280,280);
 
-var minQ = parseInt(inputMinQ, 10) || 20;
-var maxQ = parseInt(inputMaxQ, 10) || 92;
-var minS = parseInt(inputMinS, 10) || 100;
-var maxS = parseInt(inputMaxS, 10) || 1200;
+var minQ = parseInt(inputMinQ.value, 10);
+var maxQ = parseInt(inputMaxQ.value, 10);
+var minS = parseInt(inputMinS.value, 10);
+var maxS = parseInt(inputMaxS.value, 10);
+var defaultWidths = range(maxS, minS, function(x) { return Math.floor(x*0.6); });
+var inputWidths = initFormInputFromQuery(query, 'widths', form, defaultWidths.join(','));
+var widths = commaSeparatedNumbers(inputWidths.value);
+if (widths.length <= 0) {
+  widths = defaultWidths;
+}
 
-inputP1.value = p1;
-inputP2.value = p2;
+var cellW = parseInt(inputCellWidth.value, 10);
+var cellH = parseInt(inputCellHeight.value, 10);
+var imgUrl = inputUrl.value;
 
-inputMinQ.value = minQ;
-inputMaxQ.value = maxQ;
-inputMinS.value = minS;
-inputMaxS.value = maxS;
 
 var canvasStat = document.getElementById('curve-stat');
+var imgContainer = document.getElementById('container');
 
 var graph = BezierGraph(canvas, p0, p1, p2, p3, {
   stat: canvasStat,
@@ -244,7 +273,12 @@ var graph = BezierGraph(canvas, p0, p1, p2, p3, {
   minQ: minQ,
   maxQ: maxQ,
   minS: minS,
-  maxS: maxS
+  maxS: maxS,
+  widths: widths,
+  cellW: cellW,
+  cellH: cellH,
+  url: imgUrl,
+  container: imgContainer
 });
 
 </script>
