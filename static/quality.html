@@ -2,8 +2,12 @@
 <meta charset="utf-8">
 <title>Image Quality Curve</title>
 <style>
+#curve {
+  border: 1px solid black;
+}
 </style>
 <canvas id="curve"></canvas>
+<div id="curve-stat"></div>
 <div id="container">
 </div>
 <script src="utils.js"></script>
@@ -42,9 +46,94 @@ function drawBezier(ctx, p0, p1, p2, p3, interval) {
   ctx.stroke();
 }
 
+function drawControlPoint(ctx, p, radius) {
+  radius = radius || 5;
+  ctx.rect(p.x-radius, p.y-radius, radius*2, radius*2);
+  ctx.stroke();
+}
+
+function Point(x,y) {
+  return {x:x,y:y};
+}
+
+
+function BezierGraph(canvas, output, p0, p1, p2, p3) {
+  var ctx = canvas.getContext('2d');
+  var points = [p0, p1, p2, p3];
+  var bound = canvas.getBoundingClientRect();
+  var radius = 10;
+
+  var pointBeingDragged = null;
+
+
+  function findPointAt(x, y) {
+    var arr = points.filter(function(p) {
+      var left = p.x - radius;
+      var right = p.x + radius;
+      var ceil = p.y - radius;
+      var floor = p.y + radius;
+
+      return x > left && x < right && y < floor && y > ceil;
+    });
+    if (arr.length === 0) {
+      return null;
+    }
+    return arr[0];//first point
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+
+    points.forEach(function(p) {
+      drawControlPoint(ctx, p, radius);    
+    });
+
+    drawBezier(ctx, p0, p1, p2, p3, 0.05);
+  }
+
+  canvas.addEventListener('mousedown', function(evt) {
+    var x = evt.clientX - bound.left;
+    var y = evt.clientY - bound.top;
+
+    var p = findPointAt(x,y);
+    if (p) {
+      pointBeingDragged = p;
+    }
+  });
+
+  canvas.addEventListener('mouseup', function(evt) {
+    pointBeingDragged = null;
+  });
+
+  canvas.addEventListener('mousemove', function(evt) {
+    var x = evt.clientX - bound.left;
+    var y = evt.clientY - bound.top;
+    
+    output.innerHTML = x+','+y;
+
+    if (pointBeingDragged) {
+      pointBeingDragged.x = x;
+      pointBeingDragged.y = y;
+      draw();
+    }
+  });
+
+  draw();
+
+}
+
 var canvas = document.getElementById('curve');
-var ctx = canvas.getContext('2d');
-ctx.width = 500;
-ctx.height = 500;
-drawBezier(ctx, {x:10,y:10}, {x:50,y:100}, {x:150,y:200}, {x:200,y:75}, 0.05);
+canvas.width = 300;
+canvas.height = 300;
+
+var p0 = Point(20,20);
+var p1 = Point(100,100);
+var p2 = Point(200,200);
+var p3 = Point(280,280);
+
+var canvasStat = document.getElementById('curve-stat');
+
+var graph = BezierGraph(canvas, canvasStat, p0, p1, p2, p3);
+
 </script>
