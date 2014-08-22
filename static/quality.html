@@ -6,8 +6,17 @@
   border: 1px solid black;
 }
 </style>
+<div id="curve-stat">0,0</div>
 <canvas id="curve"></canvas>
-<div id="curve-stat"></div>
+<form id="form">
+  p1: <input type="text" name="p1">
+  p2: <input type="text" name="p2">
+  Minimum Quality: <input type="text" name="minQ">
+  Maximum Quality: <input type="text" name="maxQ">
+  Minimum Width: <input type="text" name="minS">
+  Maximum Width: <input type="text" name="maxS">
+  <input type="submit">
+</form>
 <div id="container">
 </div>
 <script src="utils.js"></script>
@@ -38,7 +47,7 @@ function drawBezier(ctx, p0, p1, p2, p3, interval) {
   var p3y = p3.y;
 
   ctx.moveTo(p0.x, p0.y);
-  for (var i = 0; i < 1; i += interval) {
+  for (var i = 0; i <= 1; i += interval) {
     var x = getBezierFor(i, p0x, p1x, p2x, p3x);
     var y = getBezierFor(i, p0y, p1y, p2y, p3y);
     ctx.lineTo(x, y);
@@ -53,21 +62,44 @@ function drawControlPoint(ctx, p, radius) {
 }
 
 function Point(x,y) {
-  return {x:x,y:y};
+  var me = {x:x,y:y};
+  me.toString = function() {
+    return me.x+','+me.y;
+  };
+  return me;
+}
+
+function pointFromStr(s) {
+  console.log(s);
+  if (s) {
+    var arr = s.split(',');
+    if (arr.length === 2) {
+      var x = parseInt(arr[0], 10);
+      var y = parseInt(arr[1], 10);
+      if (!isNaN(x) && !isNaN(y)) {
+        return Point(x, y);
+      }
+    }
+  }
+  return null;
 }
 
 
-function BezierGraph(canvas, output, p0, p1, p2, p3) {
+function BezierGraph(canvas, p0, p1, p2, p3, outputs) {
   var ctx = canvas.getContext('2d');
   var points = [p0, p1, p2, p3];
+  var draggablePoints = [p1, p2];
   var bound = canvas.getBoundingClientRect();
   var radius = 10;
+  var statOutput = outputs.stat;
+  var p1Output = outputs.p1;
+  var p2Output = outputs.p2;
 
   var pointBeingDragged = null;
 
 
   function findPointAt(x, y) {
-    var arr = points.filter(function(p) {
+    var arr = draggablePoints.filter(function(p) {
       var left = p.x - radius;
       var right = p.x + radius;
       var ceil = p.y - radius;
@@ -89,12 +121,17 @@ function BezierGraph(canvas, output, p0, p1, p2, p3) {
       drawControlPoint(ctx, p, radius);    
     });
 
-    drawBezier(ctx, p0, p1, p2, p3, 0.05);
+    drawBezier(ctx, p0, p1, p2, p3, 0.01);
+  }
+
+  function getMousePoint(evt) {
+    return Point(evt.offsetX,evt.offsetY);
   }
 
   canvas.addEventListener('mousedown', function(evt) {
-    var x = evt.clientX - bound.left;
-    var y = evt.clientY - bound.top;
+    var mouse = getMousePoint(evt);
+    var x = mouse.x;
+    var y = mouse.y;
 
     var p = findPointAt(x,y);
     if (p) {
@@ -107,14 +144,20 @@ function BezierGraph(canvas, output, p0, p1, p2, p3) {
   });
 
   canvas.addEventListener('mousemove', function(evt) {
-    var x = evt.clientX - bound.left;
-    var y = evt.clientY - bound.top;
+    var mouse = getMousePoint(evt);
+    var x = mouse.x;
+    var y = mouse.y;
     
-    output.innerHTML = x+','+y;
+    statOutput.innerHTML = x+','+y;
 
     if (pointBeingDragged) {
       pointBeingDragged.x = x;
       pointBeingDragged.y = y;
+      if (pointBeingDragged === p1) {
+        p1Output.value = pointBeingDragged.toString();
+      } else if (pointBeingDragged === p2) {
+        p2Output.value = pointBeingDragged.toString();
+      }
       draw();
     }
   });
@@ -123,17 +166,30 @@ function BezierGraph(canvas, output, p0, p1, p2, p3) {
 
 }
 
+var query = parseQueryString();
 var canvas = document.getElementById('curve');
 canvas.width = 300;
 canvas.height = 300;
 
+var form = document.getElementById('form');
+var inputP1 = form.querySelector('input[name="p1"]');
+var inputP2 = form.querySelector('input[name="p2"]');
+
+
 var p0 = Point(20,20);
-var p1 = Point(100,100);
-var p2 = Point(200,200);
+var p1 = pointFromStr(query.p1) || Point(100,100);
+var p2 = pointFromStr(query.p2) || Point(200,200);
 var p3 = Point(280,280);
+
+inputP1.value = p1;
+inputP2.value = p2;
 
 var canvasStat = document.getElementById('curve-stat');
 
-var graph = BezierGraph(canvas, canvasStat, p0, p1, p2, p3);
+var graph = BezierGraph(canvas, p0, p1, p2, p3, {
+  stat: canvasStat,
+  p1: inputP1,
+  p2: inputP2
+});
 
 </script>

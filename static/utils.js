@@ -1,5 +1,5 @@
 function parseQueryString(query) {
-  query = query || window.location.search.substring(1);
+  query = decodeURIComponent(query || window.location.search.substring(1));
 
   var args = {};
   query.split(/&/).forEach(function(kv) {
