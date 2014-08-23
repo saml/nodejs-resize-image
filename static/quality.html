@@ -103,6 +103,7 @@ function BezierGraph(canvas, p0, p1, p2, p3, config) {
   var maxQ = config.maxQ;
   var minArea = config.minS * config.minS;
   var maxArea = config.maxS * config.maxS;
+  var sizeRange = config.maxS - config.minS;
   var qualityRange = maxQ - minQ;
   var areaRange = maxArea - minArea;
   var heightRange = p3.y - p0.y;
@@ -158,6 +159,14 @@ function BezierGraph(canvas, p0, p1, p2, p3, config) {
     return Point(evt.offsetX,evt.offsetY);
   }
 
+  function sizeFromX(x) {
+    var ratio = (x-p0.x)/widthRange;
+    if (ratio < 0) {
+      ratio = 0;
+    }
+    return Math.floor(sizeRange*ratio);
+  }
+
   function getArea(x) {
     var ratio = (x-p0.x)/widthRange;
     if (ratio < 0) {
@@ -203,8 +212,9 @@ function BezierGraph(canvas, p0, p1, p2, p3, config) {
 
     var area = getArea(x);
     var quality = getQualityFor(area);
+    var size = sizeFromX(x);
     
-    statOutput.innerHTML = x+','+y+' | x (area): '+area+' | y (quality): '+quality;
+    statOutput.innerHTML = x+','+y+' | x (size): '+size+' | y (quality): '+quality;
 
     if (pointBeingDragged) {
       pointBeingDragged.x = x;
